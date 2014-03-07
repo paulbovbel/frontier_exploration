@@ -34,6 +34,9 @@ class BoundedExploreLayer : public costmap_2d::Layer, public costmap_2d::Costmap
 public:
     BoundedExploreLayer();
 
+    /**
+     * @brief Loads default values and initialize exploration costmap.
+     */
     virtual void onInitialize();
     virtual void updateBounds(double origin_x, double origin_y, double origin_yaw, double* polygon_min_x, double* polygon_min_y, double* polygon_max_x,
                               double* polygon_max_y);
@@ -42,23 +45,53 @@ public:
     {
         return true;
     }
+
+    /**
+     * @brief ROS Service wrapper for updateBoundaryPolygon
+     * @param req Service request
+     * @param res Service response
+     * @return
+     */
     bool updateBoundaryPolygonService(robot_explore::UpdateBoundaryPolygon::Request &req, robot_explore::UpdateBoundaryPolygon::Response &res);
+
+    /**
+     * @brief ROS Service wrapper for getNextFrontier
+     * @param req Service request
+     * @param res Service response
+     * @return
+     */
     bool getNextFrontierService(robot_explore::GetNextFrontier::Request &req, robot_explore::GetNextFrontier::Response &res);
 
     virtual void matchSize();
 
 private:
+
     dynamic_reconfigure::Server<costmap_2d::GenericPluginConfig> *dsrv_;
     ros::ServiceServer polygonService_;
     ros::ServiceServer frontierService_;
     geometry_msgs::Polygon polygon_;
     tf::TransformListener tf_listener_;
 
+    /**
+     * @brief Indicates if map boundary polygon is properly initialized and ready for drawing
+     */
     bool configured_;
     void reconfigureCB(costmap_2d::GenericPluginConfig &config, uint32_t level);
     void updateWithOverwrite(costmap_2d::Costmap2D& master_grid, int min_i, int min_j, int max_i, int max_j);
 
+    /**
+     * @brief Load polygon boundary to draw on map with each update
+     * @param polygon_stamped
+     * @return true if polygon was successfully processed, false otherwise
+     */
     bool updateBoundaryPolygon(geometry_msgs::PolygonStamped polygon_stamped);
+
+    /**
+     * @brief Search costmap for next frontier to explore
+     * @param robot_position Current robot position
+     * @param next_frontier Reference to desired frontier position
+     * @return true if found at least one frontier, false otherwise
+     */
     bool getNextFrontier(geometry_msgs::PointStamped robot_position, geometry_msgs::PointStamped &next_frontier);
 
     std::vector<unsigned int> nhood4(unsigned int idx);

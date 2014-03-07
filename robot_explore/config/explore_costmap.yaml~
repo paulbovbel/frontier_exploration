@@ -8,8 +8,8 @@ transform_tolerance: 0.5
 update_frequency: 5.0
 publish_frequency: 2.0
 
-width: 15.0
-height: 15.0
+width: 30.0
+height: 30.0
 
 resolution: 0.05
 
