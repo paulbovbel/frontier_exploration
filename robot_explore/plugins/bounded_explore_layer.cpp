@@ -330,41 +330,6 @@ bool BoundedExploreLayer::isFrontier(unsigned int idx, unsigned char* map){
 
 }
 
-//for debug, print map to stdout
-void BoundedExploreLayer::printMap(unsigned char* map){
-
-    system("clear");
-    for (int j = 0; j < size_y_; j++)
-    {
-        unsigned int it = size_x_*j;
-        for (int i = 0; i < size_x_; i++)
-        {
-
-            if(map[it] < FREE_THRESH){
-                std::cout << "\e[90mO";
-            }
-            else if(map[it] == NO_INFORMATION){
-                std::cout << "\e[36mN";
-            }
-            else if(map[it] > OCCUPIED_THRESH){
-                std::cout << "\e[31mX";
-            }
-            else if(map[it] == VISITED){
-                std::cout << "\e[95mV";
-            }
-            else if(map[it] == FRONTIER){
-                std::cout << "\e[92mF";
-            }
-            else {std::cout << " " << (unsigned int) map[it] << " ";}
-
-            it++;
-        }
-        std::cout << "\n";
-    }
-
-
-}
-
 std::vector<unsigned int> BoundedExploreLayer::nhood4(unsigned int idx){
     //get 4-neighbourhood indexes, check for edge of map
     std::vector<unsigned int> out;

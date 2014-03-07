@@ -128,9 +128,6 @@ private:
     std::vector<unsigned int> nhood8(unsigned int idx);
 
 
-    //debug
-    void printMap(unsigned char* map);
-
 };
 
 }
