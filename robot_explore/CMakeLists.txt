@@ -60,14 +60,16 @@ catkin_package(
 
 include_directories(include ${catkin_INCLUDE_DIRS} ${Boost_INCLUDE_DIRS})
 
-add_executable(robot_explore src/robot_explore.cpp)
+add_library(explore_costmap plugins/bounded_explore_layer.cpp)
+target_link_libraries(explore_costmap ${catkin_LIBRARIES})
+
+add_executable(explore_server src/explore_server.cpp)
 
 target_link_libraries(
-  robot_explore
+  explore_server
   ${catkin_LIBRARIES}
 )
 
-add_library(explore_costmap plugins/bounded_explore_layer.cpp)
-target_link_libraries(explore_costmap ${catkin_LIBRARIES})
+
 
 

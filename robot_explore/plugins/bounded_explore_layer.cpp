@@ -204,7 +204,7 @@ bool BoundedExploreLayer::getNextFrontier(geometry_msgs::PointStamped robot_posi
 
     std::list<Frontier> frontiers;
 
-    //instert index of initial robot position into queue for breadth-first-search of frontiers
+    //insert index of initial robot position into queue for breadth-first-search of frontiers
     std::queue<unsigned int> bfs;
     unsigned int robot = getIndex(mx,my);
     bfs.push(robot);
