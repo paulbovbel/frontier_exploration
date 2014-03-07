@@ -14,7 +14,7 @@
 
 #include <move_base_msgs/MoveBaseAction.h>
 
-class RobotExplore
+class ExplorationServer
 {
 protected:
 
@@ -26,16 +26,24 @@ protected:
 
 public:
 
-    RobotExplore(std::string name) :
+    ExplorationServer(std::string name) :
         tf_listener_(ros::Duration(10.0)),
         private_nh_("~"),
-        as_(nh_, name, boost::bind(&RobotExplore::executeCB, this, _1), false),
+        as_(nh_, name, boost::bind(&ExplorationServer::executeCB, this, _1), false),
         action_name_(name)
     {
 
         as_.start();
+        test();
 
-        //Autoexecute for debug
+    }
+
+    ~ExplorationServer(void)
+    {
+    }
+
+    test(){
+        //TODO: convert to proper test case
         actionlib::SimpleActionClient<robot_explore::ExploreTaskAction> exploreClient(ros::this_node::getName(), true);
         robot_explore::ExploreTaskGoal goal;
 
@@ -45,7 +53,6 @@ public:
         goal.room_center.header.frame_id = "buildingmap";
         goal.room_center.point.x = 15 + adj_x;
         goal.room_center.point.y = 13 + adj_y;
-
 
         goal.room_boundary.header.frame_id = "buildingmap";
         geometry_msgs::Point32 temp;
@@ -65,12 +72,10 @@ public:
         exploreClient.sendGoal(goal);
     }
 
-    ~RobotExplore(void)
-    {
-    }
-
     void executeCB(const robot_explore::ExploreTaskGoalConstPtr &goal)
     {
+
+        //TODO refactor as state machine
 
         int retry;
         //create exploration costmap
@@ -88,7 +93,10 @@ public:
         while(ros::ok()){
             robot_explore::UpdateBoundaryPolygon srv;
             srv.request.room_boundary = goal->room_boundary;
-            if(updateBoundaryPolygon.call(srv)){
+            if(as_.isPreemptRequested()){
+                as_.setPreempted();
+                return;
+            }else if(updateBoundaryPolygon.call(srv)){
                 ROS_INFO("set region boundary");
                 break;
             }else{
@@ -105,26 +113,31 @@ public:
 
         //connect to move_base
         actionlib::SimpleActionClient<move_base_msgs::MoveBaseAction> moveClient("move_base",true);
-        ROS_ERROR("waiting for move_base");
         if(!moveClient.waitForServer()){
             as_.setAborted();
             return;
         }
-        ROS_ERROR("found move_base");
 
         //move to room center
         retry = 5;
         while(ros::ok()){
+            if(as_.isPreemptRequested()){
+                as_.setPreempted();
+                return;
+            }
             move_base_msgs::MoveBaseGoal moveClientGoal;
             moveClientGoal.target_pose.header = goal->room_center.header;
             moveClientGoal.target_pose.pose.position = goal->room_center.point;
             moveClientGoal.target_pose.pose.orientation = getOrientationTangentToGoal(goal->room_center);
             ROS_INFO("moving robot to center of region");
-//            moveClient.sendGoalAndWait(moveClientGoal);
             moveClient.sendGoal(moveClientGoal);
-            ros::Duration(0.5).sleep();
-            moveClient.cancelAllGoals();
-            return;
+            while(!moveClient.waitForResult(ros::Duration(1))){
+                if(as_.isPreemptRequested()){
+                    moveClient.cancelAllGoals();
+                    as_.setPreempted();
+                    return;
+                }
+            }
             actionlib::SimpleClientGoalState moveClientState = moveClient.getState();
             if(moveClientState.state_ == actionlib::SimpleClientGoalState::SUCCEEDED){
                 ROS_INFO("moved to center");
@@ -160,7 +173,10 @@ public:
 
             retry = 5;
             while(ros::ok()){
-                if(getNextFrontier.call(srv)){
+                if(as_.isPreemptRequested()){
+                    as_.setPreempted();
+                    return;
+                }else if(getNextFrontier.call(srv)){
                     ROS_INFO("Found frontier to explore");
                     break;
                 }else{
@@ -175,28 +191,30 @@ public:
                         as_.setAborted();
                         return;
                     }
-                    //                    ros::Duration(0.2).sleep();
                 }
 
             }
 
-            ROS_INFO_STREAM("Closest frontier " << srv.response.next_frontier.header.frame_id << " " << srv.response.next_frontier.point.x << " " << srv.response.next_frontier.point.y << " " << srv.response.next_frontier.point.z);
-            geometry_msgs::PointStamped robot = getRobotPositionInFrame(srv.response.next_frontier.header.frame_id);
-            ROS_INFO_STREAM("Robot is at " << robot.header.frame_id << " " << robot.point.x << " " << robot.point.y << " " << robot.point.z);
-            geometry_msgs::Point halfway = getPointPartwayToGoal(srv.response.next_frontier, 0.5);
-            ROS_INFO_STREAM("Halfway is at " << halfway.x << " " << halfway.y << " " << halfway.z);
-//            geometry_msgs::Quaternion yaw = getOrientationTangentToGoal(srv.response.next_frontier);
-//            ROS_INFO_STREAM("Yaw is " << 2*acos(yaw.w)*yaw.z/M_PI*180);
-
             //move halfway to next frontier
             retry = 5;
             while(ros::ok()){
+                if(as_.isPreemptRequested()){
+                    as_.setPreempted();
+                    return;
+                }
                 move_base_msgs::MoveBaseGoal moveClientGoal;
                 moveClientGoal.target_pose.header = srv.response.next_frontier.header;
                 moveClientGoal.target_pose.pose.position = getPointPartwayToGoal(srv.response.next_frontier, 0.9);
                 moveClientGoal.target_pose.pose.orientation = getOrientationTangentToGoal(srv.response.next_frontier);
                 ROS_INFO("moving robot 0.9 to next frontier");
-                moveClient.sendGoalAndWait(moveClientGoal);
+                moveClient.sendGoal(moveClientGoal);
+                while(!moveClient.waitForResult(ros::Duration(1))){
+                    if(as_.isPreemptRequested()){
+                        moveClient.cancelAllGoals();
+                        as_.setPreempted();
+                        return;
+                    }
+                }
                 actionlib::SimpleClientGoalState moveClientState = moveClient.getState();
                 if(moveClientState.state_ == actionlib::SimpleClientGoalState::SUCCEEDED){
                     ROS_INFO("moved  halfway to next frontier");
@@ -214,8 +232,6 @@ public:
                 }
             }
 
-            //            ROS_INFO("spin");
-            //            ros::Duration(0.5).sleep();
         }
 
     }
@@ -286,10 +302,9 @@ int main(int argc, char** argv)
 {
     ros::init(argc, argv, "robot_explore");
 
-    RobotExplore robot_explore(ros::this_node::getName());
-    ros::MultiThreadedSpinner spinner(4);
+    ExplorationServer explore_server(ros::this_node::getName());
+    ros::MultiThreadedSpinner spinner(2);
     spinner.spin();
-
 
     return 0;
 }
