@@ -2,7 +2,7 @@
 
 <launch>
 
-  <node pkg="robot_explore" type="robot_explore" respawn="false" name="robot_explore" output="screen">
+  <node pkg="robot_explore" type="explore_server" respawn="false" name="robot_explore" output="screen">
       <rosparam file="$(find robot_explore)/config/explore_costmap.yaml" command="load" ns="explore_costmap" />
   </node>
 

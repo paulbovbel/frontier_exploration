@@ -72,6 +72,10 @@ public:
         exploreClient.sendGoal(goal);
     }
 
+    /**
+     * @brief Performs frontier exploration action using exploration costmap layer
+     * @param goal contains exploration boundary as polygon, and initial exploration point
+     */
     void executeCB(const robot_explore::ExploreTaskGoalConstPtr &goal)
     {
 
@@ -81,33 +85,36 @@ public:
         //create exploration costmap
         costmap_2d::Costmap2DROS explore_costmap_ros("explore_costmap", tf_listener_);
 
-        //wait for boundary service to come online
-        ros::ServiceClient updateBoundaryPolygon = private_nh_.serviceClient<robot_explore::UpdateBoundaryPolygon>("explore_costmap/explore_boundary/update_boundary_polygon");
-        if(!updateBoundaryPolygon.waitForExistence()){
-            as_.setAborted();
-            return;
-        }      
-
-        //set region boundary on costmap
-        retry = 5;
-        while(ros::ok()){
-            robot_explore::UpdateBoundaryPolygon srv;
-            srv.request.room_boundary = goal->room_boundary;
-            if(as_.isPreemptRequested()){
-                as_.setPreempted();
+        //check if exploration boundary was provided
+        if(!goal->room_boundary.polygon.points.empty()){
+            //wait for boundary service to come online
+            ros::ServiceClient updateBoundaryPolygon = private_nh_.serviceClient<robot_explore::UpdateBoundaryPolygon>("explore_costmap/explore_boundary/update_boundary_polygon");
+            if(!updateBoundaryPolygon.waitForExistence()){
+                as_.setAborted();
                 return;
-            }else if(updateBoundaryPolygon.call(srv)){
-                ROS_INFO("set region boundary");
-                break;
-            }else{
-                ROS_ERROR("failed to set region boundary");
-                retry--;
-                if(retry == 0 || !ros::ok()){
-                    as_.setAborted();
+            }
+
+            //set region boundary on costmap
+            retry = 5;
+            while(ros::ok()){
+                robot_explore::UpdateBoundaryPolygon srv;
+                srv.request.room_boundary = goal->room_boundary;
+                if(as_.isPreemptRequested()){
+                    as_.setPreempted();
                     return;
+                }else if(updateBoundaryPolygon.call(srv)){
+                    ROS_INFO("set region boundary");
+                    break;
+                }else{
+                    ROS_ERROR("failed to set region boundary");
+                    retry--;
+                    if(retry == 0 || !ros::ok()){
+                        as_.setAborted();
+                        return;
+                    }
+                    ROS_WARN("retrying...");
+                    ros::Duration(0.5).sleep();
                 }
-                ROS_WARN("retrying...");
-                ros::Duration(0.5).sleep();
             }
         }
 
@@ -118,7 +125,7 @@ public:
             return;
         }
 
-        //move to room center
+        //move to initial exploration point
         retry = 5;
         while(ros::ok()){
             if(as_.isPreemptRequested()){
@@ -140,10 +147,10 @@ public:
             }
             actionlib::SimpleClientGoalState moveClientState = moveClient.getState();
             if(moveClientState.state_ == actionlib::SimpleClientGoalState::SUCCEEDED){
-                ROS_INFO("moved to center");
+                ROS_INFO("moved to initial exploration point");
                 break;
             }else{
-                ROS_ERROR("failed to move to center");
+                ROS_ERROR("failed to move to initial exploration point");
                 retry--;
                 if(retry == 0 || !ros::ok()){
                     as_.setAborted();
@@ -204,9 +211,9 @@ public:
                 }
                 move_base_msgs::MoveBaseGoal moveClientGoal;
                 moveClientGoal.target_pose.header = srv.response.next_frontier.header;
-                moveClientGoal.target_pose.pose.position = getPointPartwayToGoal(srv.response.next_frontier, 0.9);
+                moveClientGoal.target_pose.pose.position = getPointPartwayToGoal(srv.response.next_frontier, 0.95);
                 moveClientGoal.target_pose.pose.orientation = getOrientationTangentToGoal(srv.response.next_frontier);
-                ROS_INFO("moving robot 0.9 to next frontier");
+                ROS_INFO("moving robot to next frontier");
                 moveClient.sendGoal(moveClientGoal);
                 while(!moveClient.waitForResult(ros::Duration(1))){
                     if(as_.isPreemptRequested()){
@@ -217,11 +224,11 @@ public:
                 }
                 actionlib::SimpleClientGoalState moveClientState = moveClient.getState();
                 if(moveClientState.state_ == actionlib::SimpleClientGoalState::SUCCEEDED){
-                    ROS_INFO("moved  halfway to next frontier");
+                    ROS_INFO("moved to next frontier");
                     success = true;
                     break;
                 }else{
-                    ROS_ERROR("failed to move halfway to next frontier");
+                    ROS_ERROR("failed to move to next frontier");
                     retry--;
                     if(retry == 0 || !ros::ok()){
                         as_.setAborted();
@@ -236,6 +243,11 @@ public:
 
     }
 
+    /**
+     * @brief Convience method for obtaining current position of robot in any frame
+     * @param frame
+     * @return robot position
+     */
     geometry_msgs::PointStamped getRobotPositionInFrame(std::string frame){
 
         //return current robot position transformed into requested frame
@@ -263,6 +275,11 @@ public:
 
     }
 
+    /**
+     * @brief Convenience method for obtaining a robot orientation tangent to the overall path. Simplification of a difficult problem.
+     * @param goalPoint Target for robot path
+     * @return orientation of robot
+     */
     geometry_msgs::Quaternion getOrientationTangentToGoal(geometry_msgs::PointStamped goalPoint){
 
         geometry_msgs::PointStamped robot_position = getRobotPositionInFrame(goalPoint.header.frame_id);
@@ -283,6 +300,12 @@ public:
 
     }
 
+    /**
+     * @brief Convenience method for getting a point partway between the current robot position and a target location
+     * @param goalPoint
+     * @param fraction
+     * @return
+     */
     geometry_msgs::Point getPointPartwayToGoal(geometry_msgs::PointStamped goalPoint, double fraction){
 
         geometry_msgs::PointStamped robot_position = getRobotPositionInFrame(goalPoint.header.frame_id);
