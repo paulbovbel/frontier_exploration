@@ -1,5 +1,5 @@
-geometry_msgs/PointStamped room_center
-geometry_msgs/PolygonStamped room_boundary
+geometry_msgs/PointStamped initial_point
+geometry_msgs/PolygonStamped exploration_boundary
 ---
 bool success
 ---

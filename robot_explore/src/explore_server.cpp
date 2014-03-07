@@ -56,7 +56,7 @@ public:
         costmap_2d::Costmap2DROS explore_costmap_ros("explore_costmap", tf_listener_);
 
         //check if exploration boundary was provided
-        if(!goal->room_boundary.polygon.points.empty()){
+        if(!goal->exploration_boundary.polygon.points.empty()){
             //wait for boundary service to come online
             ros::ServiceClient updateBoundaryPolygon = private_nh_.serviceClient<robot_explore::UpdateBoundaryPolygon>("explore_costmap/explore_boundary/update_boundary_polygon");
             if(!updateBoundaryPolygon.waitForExistence()){
@@ -68,7 +68,7 @@ public:
             retry = 5;
             while(ros::ok()){
                 robot_explore::UpdateBoundaryPolygon srv;
-                srv.request.room_boundary = goal->room_boundary;
+                srv.request.exploration_boundary = goal->exploration_boundary;
                 if(as_.isPreemptRequested()){
                     as_.setPreempted();
                     return;
@@ -103,9 +103,9 @@ public:
                 return;
             }
             move_base_msgs::MoveBaseGoal moveClientGoal;
-            moveClientGoal.target_pose.header = goal->room_center.header;
-            moveClientGoal.target_pose.pose.position = goal->room_center.point;
-            moveClientGoal.target_pose.pose.orientation = getOrientationTangentToGoal(goal->room_center);
+            moveClientGoal.target_pose.header = goal->initial_point.header;
+            moveClientGoal.target_pose.pose.position = goal->initial_point.point;
+            moveClientGoal.target_pose.pose.orientation = getOrientationTangentToGoal(goal->initial_point);
             ROS_INFO("moving robot to center of region");
             moveClient.sendGoal(moveClientGoal);
             while(!moveClient.waitForResult(ros::Duration(1))){

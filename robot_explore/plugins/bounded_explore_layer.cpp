@@ -60,7 +60,7 @@ void BoundedExploreLayer::reconfigureCB(costmap_2d::GenericPluginConfig &config,
 
 bool BoundedExploreLayer::updateBoundaryPolygonService(robot_explore::UpdateBoundaryPolygon::Request &req, robot_explore::UpdateBoundaryPolygon::Response &res){
 
-    return updateBoundaryPolygon(req.room_boundary);
+    return updateBoundaryPolygon(req.exploration_boundary);
 
 }
 

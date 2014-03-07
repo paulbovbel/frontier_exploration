@@ -1,2 +1,2 @@
-geometry_msgs/PolygonStamped room_boundary
+geometry_msgs/PolygonStamped exploration_boundary
 ---
