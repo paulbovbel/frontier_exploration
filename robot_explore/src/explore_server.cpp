@@ -258,9 +258,6 @@ public:
         double delta_x, delta_y;
         delta_x = goalPoint.point.x - robot_position.point.x;
         delta_y = goalPoint.point.y - robot_position.point.y;
-        ROS_ERROR_STREAM("From point "<<robot_position.point.x<< " "<<robot_position.point.y);
-        ROS_ERROR_STREAM("  To point "<<goalPoint.point.x<< " "<<goalPoint.point.y);
-        ROS_ERROR_STREAM("      Diff "<<delta_x<<" "<<delta_y);
         double yaw = atan(delta_x/delta_y);
         if(delta_x < 0){
             M_PI-yaw;

@@ -185,7 +185,6 @@ bool BoundedExploreLayer::getNextFrontier(geometry_msgs::PointStamped robot_posi
     tf_listener_.transformPoint(layered_costmap_->getGlobalFrameID(),robot_position,temp_position);
     int mx,my;
     worldToMapNoBounds(temp_position.point.x,temp_position.point.y,mx,my);
-    ROS_INFO_STREAM("Robot position " << mx << " " << my);
 
     //Check if robot is outside map bounds, error out
     if (mx < 0 || mx > getSizeInCellsX() || my < 0 || my > getSizeInCellsY()){
