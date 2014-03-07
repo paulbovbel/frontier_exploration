@@ -1,7 +1,7 @@
 frontier-exploration
 ====================
 
-Implementation of frontier exploration for ROS using a custom costmap layer (hydro required).
+Implementation of frontier exploration for ROS using a costmap_2d layer plugin (hydro required).
 
 Runs an exploration task in a static or dynamic environment, bounded by a client-defined polygon. Passes movement commands to move_base.
 
