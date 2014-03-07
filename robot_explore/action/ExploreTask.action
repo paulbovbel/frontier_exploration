@@ -1,0 +1,7 @@
+geometry_msgs/PointStamped room_center
+geometry_msgs/PolygonStamped room_boundary
+---
+bool success
+---
+float32 progress
+

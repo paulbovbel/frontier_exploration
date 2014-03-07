@@ -1,0 +1,3 @@
+geometry_msgs/PointStamped robot_position
+---
+geometry_msgs/PointStamped next_frontier

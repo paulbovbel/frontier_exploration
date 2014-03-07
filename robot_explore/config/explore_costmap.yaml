@@ -1,0 +1,31 @@
+footprint: [[0.27, 0.0], [-0.15, 0.26], [-0.15, -0.26]]
+inflation_radius: 0.10
+max_obstacle_height: 1.3
+robot_radius: 0.27
+track_unknown_space: true
+
+transform_tolerance: 0.5
+update_frequency: 5.0
+publish_frequency: 2.0
+
+width: 30.0
+height: 30.0
+
+resolution: 0.05
+
+global_frame: buildingmap
+robot_base_frame: base_link
+rolling_window: false
+
+plugins: 
+
+    - {name: explore_boundary,        type: "robot_explore::BoundedExploreLayer"}
+    - {name: explore_sensor,          type: "costmap_2d::ObstacleLayer"}
+    - {name: inflation,               type: "costmap_2d::InflationLayer"}
+
+inflation:
+    inflation_radius: 0.15
+
+explore_sensor:
+    observation_sources: hokuyo
+    hokuyo: {data_type: LaserScan, clearing: true, marking: true, topic: /hokuyo/scan, inf_is_valid: true, obstacle_range: 1.0, raytrace_range: 1.0}
