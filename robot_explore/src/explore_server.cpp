@@ -34,7 +34,6 @@ public:
     {
 
         as_.start();
-        test();
 
     }
 
@@ -42,35 +41,6 @@ public:
     {
     }
 
-    test(){
-        //TODO: convert to proper test case
-        actionlib::SimpleActionClient<robot_explore::ExploreTaskAction> exploreClient(ros::this_node::getName(), true);
-        robot_explore::ExploreTaskGoal goal;
-
-        double adj_y = 0.25;//0.25;
-        double adj_x = 0;//-0.1;
-
-        goal.room_center.header.frame_id = "buildingmap";
-        goal.room_center.point.x = 15 + adj_x;
-        goal.room_center.point.y = 13 + adj_y;
-
-        goal.room_boundary.header.frame_id = "buildingmap";
-        geometry_msgs::Point32 temp;
-        temp.x = 19.3257 + adj_x;
-        temp.y = 15.7174 + adj_y;
-        goal.room_boundary.polygon.points.push_back(temp);
-        temp.x = 19.8346 + adj_x;
-        temp.y = 14.6269 + adj_y;
-        goal.room_boundary.polygon.points.push_back(temp);
-        temp.x = 15.4353 + adj_x;
-        temp.y = 12.2612 + adj_y;
-        goal.room_boundary.polygon.points.push_back(temp);
-        temp.x = 14.2299 + adj_x;
-        temp.y = 14.2701 + adj_y;
-        goal.room_boundary.polygon.points.push_back(temp);
-
-        exploreClient.sendGoal(goal);
-    }
 
     /**
      * @brief Performs frontier exploration action using exploration costmap layer
