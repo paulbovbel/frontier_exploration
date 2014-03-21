@@ -1,7 +1,6 @@
-geometry_msgs/PointStamped initial_point
-geometry_msgs/PolygonStamped exploration_boundary
+geometry_msgs/PointStamped explore_center
+geometry_msgs/PolygonStamped explore_boundary
 ---
-bool success
 ---
-float32 progress
-
+geometry_msgs/PoseStamped next_frontier
+geometry_msgs/PoseStamped base_position
