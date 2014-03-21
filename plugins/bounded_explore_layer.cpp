@@ -182,7 +182,7 @@ std::list<Frontier> BoundedExploreLayer::findFrontiers(geometry_msgs::Point posi
 
     //make copy of costmap for searching
     std::copy(map, map+size, search_map);
-    lock.release();
+    lock.unlock();
 
     //instert index of initial robot position into queue for breadth-first-search of frontiers
     std::queue<unsigned int> bfs;
