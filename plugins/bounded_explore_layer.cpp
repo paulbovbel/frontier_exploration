@@ -186,7 +186,7 @@ std::list<Frontier> BoundedExploreLayer::findFrontiers(geometry_msgs::Point posi
 
     //instert index of initial robot position into queue for breadth-first-search of frontiers
     std::queue<unsigned int> bfs;
-    unsigned int robot = getIndex(start_x,start_y);
+    unsigned int robot = getIndex(mx,my);
 
     unsigned int clear;
 

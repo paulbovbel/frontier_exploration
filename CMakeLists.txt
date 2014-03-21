@@ -27,10 +27,10 @@ add_action_files(
   ExploreTask.action
 )
 
- generate_messages(
-   DEPENDENCIES
-   geometry_msgs   std_msgs  actionlib_msgs nav_msgs
- )
+generate_messages(
+  DEPENDENCIES
+  geometry_msgs   std_msgs  actionlib_msgs
+)
 
 catkin_package(
   INCLUDE_DIRS include
@@ -40,11 +40,8 @@ catkin_package(
     dynamic_reconfigure
     geometry_msgs
     roscpp
-    std_msgs
     tf
     actionlib
-    actionlib_msgs
-    message_generation
   DEPENDS
     PCL
     Boost
@@ -52,16 +49,8 @@ catkin_package(
 
 include_directories(include ${catkin_INCLUDE_DIRS} ${Boost_INCLUDE_DIRS} ${PCL_INCLUDE_DIRS})
 
-add_executable(explore_server src/explore_server.cpp)
-
-target_link_libraries(
-  robot_explore
-  ${catkin_LIBRARIES}
-  ${PCL_LIBRARIES
-  ${Boost_LIBRARIES}
-)
-
 add_library(explore_costmap plugins/bounded_explore_layer.cpp)
-target_link_libraries(explore_costmap ${catkin_LIBRARIES})
+target_link_libraries(explore_costmap ${catkin_LIBRARIES} ${PCL_LIBRARIES} ${Boost_LIBRARIES})
 
-
+add_executable(explore_server src/explore_server.cpp)
+target_link_libraries(explore_server ${catkin_LIBRARIES})
