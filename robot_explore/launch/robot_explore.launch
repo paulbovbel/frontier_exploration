@@ -3,7 +3,51 @@
 <launch>
 
   <node pkg="robot_explore" type="explore_server" respawn="false" name="explore_server" output="screen">
-      <rosparam file="$(find robot_explore)/config/explore_costmap.yaml" command="load" ns="explore_costmap" />
+      <rosparam ns="explore_costmap">
+        #Sample parameters
+        footprint: [[0.1, 0.0], [0.0, 0.1], [0.0, -0.1], [-0.1, 0.0]]
+        robot_radius: 0.10
+        
+        transform_tolerance: 2.0
+        update_frequency: 2.0
+        publish_frequency: 1.0
+
+        global_frame: map
+        robot_base_frame: base_link
+        resolution: 0.05
+
+        #Must be rolling and track unknown space to work with BoundedExploreLayer
+        rolling_window: false
+        track_unknown_space: true
+
+        plugins: 
+
+            - {name: explore_boundary,        type: "robot_explore::BoundedExploreLayer"}
+
+            #Must have external map or some sort of sensor to clear out obstacles
+            - {name: static,                  type: "costmap_2d::StaticLayer"}            
+            - {name: explore_sensor,          type: "costmap_2d::ObstacleLayer"}
+
+            - {name: inflation,               type: "costmap_2d::InflationLayer"}
+
+        static:
+            #Can pull data from static map or another non-rolling costmap, make sure global_frame is the same
+            map_topic: map
+            map_topic: move_base/global_costmap/costmap   
+            subscribe_to_updates: true
+
+        explore_boundary:
+            #if using static map, disable boundary resizing
+            resize_to_boundary: false
+
+        explore_sensor:
+            #sensor range determines how much map is cleared out during exploration, make sure to enable inf_is_valid if necessary
+            observation_sources: laser
+            laser: {data_type: LaserScan, clearing: true, marking: true, topic: /scan, inf_is_valid: true}
+
+        inflation:
+            inflation_radius: 0.15
+      </rosparam>
   </node>
 
 </launch>
