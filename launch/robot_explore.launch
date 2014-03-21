@@ -2,7 +2,7 @@
 
 <launch>
 
-  <node pkg="robot_explore" type="explore_server" respawn="false" name="explore_server" output="screen">
+  <node pkg="frontier_exploration" type="explore_server" respawn="false" name="explore_server" output="screen">
       <rosparam ns="explore_costmap">
         #Sample parameters
         footprint: [[0.1, 0.0], [0.0, 0.1], [0.0, -0.1], [-0.1, 0.0]]

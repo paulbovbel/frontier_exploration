@@ -1,12 +1,12 @@
-#include <robot_explore/bounded_explore_layer.h>
+#include <frontier_exploration/bounded_explore_layer.h>
 #include <pluginlib/class_list_macros.h>
 
 #include <geometry_msgs/PolygonStamped.h>
 
 #include <costmap_2d/costmap_2d.h>
 
-#include <robot_explore/UpdateBoundaryPolygon.h>
-#include <robot_explore/GetNextFrontier.h>
+#include <frontier_exploration/UpdateBoundaryPolygon.h>
+#include <frontier_exploration/GetNextFrontier.h>
 #include <boost/foreach.hpp>
 #include <costmap_2d/footprint.h>
 
@@ -17,9 +17,9 @@
 #include <pcl/point_types.h>
 
 
-PLUGINLIB_EXPORT_CLASS(robot_explore::BoundedExploreLayer, costmap_2d::Layer)
+PLUGINLIB_EXPORT_CLASS(frontier_exploration::BoundedExploreLayer, costmap_2d::Layer)
 
-namespace robot_explore
+namespace frontier_exploration
 {
 
 typedef pcl::PointXYZI PointType;
@@ -71,7 +71,7 @@ void BoundedExploreLayer::reconfigureCB(costmap_2d::GenericPluginConfig &config,
     enabled_ = config.enabled;
 }
 
-bool BoundedExploreLayer::getNextFrontierService(robot_explore::GetNextFrontier::Request &req, robot_explore::GetNextFrontier::Response &res){
+bool BoundedExploreLayer::getNextFrontierService(frontier_exploration::GetNextFrontier::Request &req, frontier_exploration::GetNextFrontier::Response &res){
     return getNextFrontier(req.start_pose, res.next_frontier);
 }
 
@@ -373,7 +373,7 @@ std::vector<unsigned int> BoundedExploreLayer::nhood8(unsigned int idx){
 
 }
 
-bool BoundedExploreLayer::updateBoundaryPolygonService(robot_explore::UpdateBoundaryPolygon::Request &req, robot_explore::UpdateBoundaryPolygon::Response &res){
+bool BoundedExploreLayer::updateBoundaryPolygonService(frontier_exploration::UpdateBoundaryPolygon::Request &req, frontier_exploration::UpdateBoundaryPolygon::Response &res){
 
     return updateBoundaryPolygon(req.explore_boundary);
 

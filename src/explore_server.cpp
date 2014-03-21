@@ -6,15 +6,15 @@
 
 #include <geometry_msgs/PolygonStamped.h>
 
-#include <robot_explore/ExploreTaskAction.h>
-#include <robot_explore/GetNextFrontier.h>
-#include <robot_explore/UpdateBoundaryPolygon.h>
+#include <frontier_exploration/ExploreTaskAction.h>
+#include <frontier_exploration/GetNextFrontier.h>
+#include <frontier_exploration/UpdateBoundaryPolygon.h>
 
 #include <tf/transform_listener.h>
 
 #include <move_base_msgs/MoveBaseAction.h>
 
-namespace robot_explore{
+namespace frontier_exploration{
 
 class ExampleExplorationServer
 {
@@ -35,14 +35,14 @@ protected:
     ros::NodeHandle nh_;
     ros::NodeHandle private_nh_;
     tf::TransformListener tf_listener_;
-    actionlib::SimpleActionServer<robot_explore::ExploreTaskAction> as_;
+    actionlib::SimpleActionServer<frontier_exploration::ExploreTaskAction> as_;
     std::string action_name_;
 
     /**
      * @brief Performs frontier exploration action using exploration costmap layer
      * @param goal contains exploration boundary as polygon, and initial exploration point
      */
-    void executeCB(const robot_explore::ExploreTaskGoalConstPtr &goal)
+    void executeCB(const frontier_exploration::ExploreTaskGoalConstPtr &goal)
     {
 
         int retry;
@@ -50,7 +50,7 @@ protected:
         costmap_2d::Costmap2DROS explore_costmap_ros("explore_costmap", tf_listener_);
 
         //wait for boundary service to come online
-        ros::ServiceClient updateBoundaryPolygon = private_nh_.serviceClient<robot_explore::UpdateBoundaryPolygon>("explore_costmap/explore_boundary/update_boundary_polygon");
+        ros::ServiceClient updateBoundaryPolygon = private_nh_.serviceClient<frontier_exploration::UpdateBoundaryPolygon>("explore_costmap/explore_boundary/update_boundary_polygon");
         if(!updateBoundaryPolygon.waitForExistence()){
             as_.setAborted();
             return;
@@ -58,7 +58,7 @@ protected:
         //set region boundary on costmap
         retry = 5;
         while(ros::ok() && !as_.isPreemptRequested()){
-            robot_explore::UpdateBoundaryPolygon srv;
+            frontier_exploration::UpdateBoundaryPolygon srv;
             srv.request.explore_boundary = goal->explore_boundary;
             if(updateBoundaryPolygon.call(srv)){
                 ROS_INFO("set region boundary");
@@ -111,7 +111,7 @@ protected:
         }
 
         //wait for frontier calculation service to come online
-        ros::ServiceClient getNextFrontier = private_nh_.serviceClient<robot_explore::GetNextFrontier>("explore_costmap/explore_boundary/get_next_frontier");
+        ros::ServiceClient getNextFrontier = private_nh_.serviceClient<frontier_exploration::GetNextFrontier>("explore_costmap/explore_boundary/get_next_frontier");
         if(!getNextFrontier.waitForExistence()){
             as_.setAborted();
             return;
@@ -121,7 +121,7 @@ protected:
         //loop until all frontiers are explored (can't find any more)
         while(ros::ok()){
 
-            robot_explore::GetNextFrontier srv;
+            frontier_exploration::GetNextFrontier srv;
             tf::Stamped<tf::Pose> robot_pose;
 
             explore_costmap_ros.getRobotPose(robot_pose);
@@ -214,9 +214,9 @@ protected:
 
 int main(int argc, char** argv)
 {
-    ros::init(argc, argv, "robot_explore");
+    ros::init(argc, argv, "frontier_exploration");
 
-    robot_explore::ExampleExplorationServer server(ros::this_node::getName());
+    frontier_exploration::ExampleExplorationServer server(ros::this_node::getName());
     ros::spin();
     return 0;
 }

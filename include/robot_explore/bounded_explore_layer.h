@@ -7,10 +7,10 @@
 #include <dynamic_reconfigure/server.h>
 
 #include <geometry_msgs/Polygon.h>
-#include <robot_explore/UpdateBoundaryPolygon.h>
-#include <robot_explore/GetNextFrontier.h>
+#include <frontier_exploration/UpdateBoundaryPolygon.h>
+#include <frontier_exploration/GetNextFrontier.h>
 
-namespace robot_explore
+namespace frontier_exploration
 {
 
 using costmap_2d::LETHAL_OBSTACLE;
@@ -100,7 +100,7 @@ private:
      * @param res Service response
      * @return true on service success, false otherwise
      */
-    bool updateBoundaryPolygonService(robot_explore::UpdateBoundaryPolygon::Request &req, robot_explore::UpdateBoundaryPolygon::Response &res);
+    bool updateBoundaryPolygonService(frontier_exploration::UpdateBoundaryPolygon::Request &req, frontier_exploration::UpdateBoundaryPolygon::Response &res);
 
     /**
      * @brief ROS Service wrapper for getNextFrontier
@@ -108,7 +108,7 @@ private:
      * @param res Service response
      * @return true on service success, false otherwise
      */
-    bool getNextFrontierService(robot_explore::GetNextFrontier::Request &req, robot_explore::GetNextFrontier::Response &res);
+    bool getNextFrontierService(frontier_exploration::GetNextFrontier::Request &req, frontier_exploration::GetNextFrontier::Response &res);
 
     /**
      * @brief findFrontiers Find all frontiers on costmap reachable from position
