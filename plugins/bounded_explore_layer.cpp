@@ -381,6 +381,10 @@ void BoundedExploreLayer::reset(){
 
 bool BoundedExploreLayer::updateBoundaryPolygon(geometry_msgs::PolygonStamped polygon_stamped){ 
 
+    if(configured_){
+        reset();
+    }
+
     //error out if no transform available between polygon and costmap
     if(!tf_listener_.waitForTransform(layered_costmap_->getGlobalFrameID(), polygon_stamped.header.frame_id,ros::Time::now(),ros::Duration(10))) {
         ROS_ERROR_STREAM("Couldn't transform from "<<layered_costmap_->getGlobalFrameID()<<" to "<< polygon_stamped.header.frame_id);
