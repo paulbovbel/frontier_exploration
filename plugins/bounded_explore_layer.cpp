@@ -77,7 +77,7 @@ bool BoundedExploreLayer::getNextFrontierService(frontier_exploration::GetNextFr
 
 bool BoundedExploreLayer::getNextFrontier(geometry_msgs::PoseStamped start_pose, geometry_msgs::PoseStamped &next_frontier){
 
-    //wait for costmap to get marked
+    //wait for costmap to get marked with boundary
     ros::Rate r(10);
     while(!marked_){
         ros::spinOnce();
@@ -109,9 +109,6 @@ bool BoundedExploreLayer::getNextFrontier(geometry_msgs::PoseStamped start_pose,
     int max;
 
     BOOST_FOREACH(Frontier frontier, frontiers){
-        //        ROS_WARN_STREAM("Frontier of size " << frontier.size << " distance " << frontier.min_distance);// << " " << frontier.middle_x<< " " << frontier.middle_y);
-        temp.x = frontier.middle_x;
-        temp.y = frontier.middle_y;
         temp.x = frontier.initial_x;
         temp.y = frontier.initial_y;
         temp.z = 0;
@@ -123,14 +120,8 @@ bool BoundedExploreLayer::getNextFrontier(geometry_msgs::PoseStamped start_pose,
         }
     }
 
-    //replace max element
-    temp.x = out.middle_x;
-    temp.y = out.middle_y;
-    temp.x = out.initial_x;
-    temp.y = out.initial_y;
-    temp.z = 0;
-    temp.intensity = 100;
-    cloud[max] = temp;
+    //color selected frontier
+    cloud[max].intensity = 100;
 
     sensor_msgs::PointCloud2 output;
     pcl::toROSMsg(cloud,output);
@@ -138,15 +129,14 @@ bool BoundedExploreLayer::getNextFrontier(geometry_msgs::PoseStamped start_pose,
     output.header.stamp = ros::Time::now();
     frontier_cloud.publish(output);
 
+    //set goal pose to next frontier
     next_frontier.header.frame_id = layered_costmap_->getGlobalFrameID();
     next_frontier.header.stamp = ros::Time::now();
-
-    next_frontier.pose.position.x = out.middle_x;
-    next_frontier.pose.position.y = out.middle_y;
     next_frontier.pose.position.x = out.initial_x;
     next_frontier.pose.position.y = out.initial_y;
     next_frontier.pose.position.z = 0;
 
+    //set set goal pose yaw tangent to path between two points
     double delta_x, delta_y;
     delta_x = next_frontier.pose.position.x - start_pose.pose.position.x;
     delta_y = next_frontier.pose.position.y - start_pose.pose.position.y;
@@ -168,32 +158,33 @@ std::list<Frontier> BoundedExploreLayer::findFrontiers(geometry_msgs::Point posi
     int mx,my;
     worldToMapNoBounds(position.x,position.y,mx,my);
 
-    //Check if robot is outside map bounds, error out
+    //Check if robot is outside costmap bounds before searching
     if (mx < 0 || mx > getSizeInCellsX() || my < 0 || my > getSizeInCellsY()){
-        ROS_ERROR("Robot out of exploration bounds");
+        ROS_ERROR("Robot out of costmap bounds, cannot search for frontiers");
         return frontiers;
     }
 
+    //make sure costmap state is consistent
     boost::unique_lock < boost::shared_mutex > lock(*(costmap->getLock()));
     unsigned char* map = costmap->getCharMap();
 
+    //make copy of costmap for searching
     int size = getIndex(getSizeInCellsX(),getSizeInCellsY());
     unsigned char search_map[size];
-
-    //make copy of costmap for searching
     std::copy(map, map+size, search_map);
     lock.unlock();
 
-    //instert index of initial robot position into queue for breadth-first-search of frontiers
+    //instert index of initial position into queue for breadth-first-search
     std::queue<unsigned int> bfs;
-    unsigned int robot = getIndex(mx,my);
+    unsigned int initial = getIndex(mx,my);
 
     unsigned int clear;
 
-    if(nearestCell(clear,robot,FREE_SPACE,search_map)){
+    //find closest clear cell to start search
+    if(nearestCell(clear,initial,FREE_SPACE,search_map)){
         bfs.push(clear);
     }else{
-        bfs.push(robot);
+        bfs.push(initial);
         ROS_WARN("Could not find nearby clear cell to start search");
     }
 
@@ -201,11 +192,10 @@ std::list<Frontier> BoundedExploreLayer::findFrontiers(geometry_msgs::Point posi
         unsigned int idx = bfs.front();
         bfs.pop();
 
-        //for each neighbouring point
+        //iterate over 4-connected neighbourhood
         BOOST_FOREACH(unsigned nbr, nhood4(idx)){
-            //if(search_map[nbr] == FREE_SPACE){
-            // ^ gets stuck if the robot is currently located on non-zero cost grid, so use descending-value-search instead:
-            if(search_map[nbr] == FREE_SPACE || (search_map[nbr] != VISITED && search_map[nbr] != FRONTIER && search_map[nbr] < search_map[idx])){
+            //search free space only
+            if(search_map[nbr] == FREE_SPACE){
                 bfs.push(nbr);
                 search_map[nbr] = VISITED;
             }else if(isFrontier(nbr, search_map)){
@@ -228,6 +218,7 @@ Frontier BoundedExploreLayer::buildFrontier(unsigned int front, unsigned int rob
     out.centroid_y = 0;
     out.min_distance = std::numeric_limits<double>::infinity();
 
+    //record initial contact point for frontier
     unsigned int ix, iy;
     indexToCells(front,ix,iy);
     mapToWorld(ix,iy,out.initial_x,out.initial_y);
@@ -246,7 +237,7 @@ Frontier BoundedExploreLayer::buildFrontier(unsigned int front, unsigned int rob
         unsigned int idx = bfs.front();
         bfs.pop();
 
-        //try adding gridcell in 8-neighbourhood to frontier
+        //try adding cells in 8-connected neighborhood to frontier
         BOOST_FOREACH(unsigned int nbr, nhood8(idx)){
             if(isFrontier(nbr,map)){
 
@@ -284,12 +275,12 @@ Frontier BoundedExploreLayer::buildFrontier(unsigned int front, unsigned int rob
 
 bool BoundedExploreLayer::isFrontier(unsigned int idx, unsigned char* map){
 
-    //check that cell is unknown before more complex check
+    //check that cell is unknown before checking neighbors
     if(map[idx] != NO_INFORMATION){
         return false;
     }
 
-    //check that at least one cell in 8-neighbourhood is free (could already have been marked VISITED by search algorithm)
+    //frontier cells should have at least one cell in 4-connected neighbourhood that is free
     BOOST_FOREACH(unsigned int nbr, nhood4(idx)){
         if(map[nbr] == VISITED || map[nbr] == FREE_SPACE){
             return true;
@@ -333,7 +324,7 @@ bool BoundedExploreLayer::nearestCell(unsigned int &result, unsigned int start, 
 }
 
 std::vector<unsigned int> BoundedExploreLayer::nhood4(unsigned int idx){
-    //get 4-neighbourhood indexes, check for edge of map
+    //get 4-connected neighbourhood indexes, check for edge of map
     std::vector<unsigned int> out;
 
     if(idx % size_x_ > 0){
@@ -353,7 +344,7 @@ std::vector<unsigned int> BoundedExploreLayer::nhood4(unsigned int idx){
 }
 
 std::vector<unsigned int> BoundedExploreLayer::nhood8(unsigned int idx){
-    //get 8-neighbourhood indexes, check for edge of map
+    //get 8-connected neighbourhood indexes, check for edge of map
     std::vector<unsigned int> out = nhood4(idx);
 
     if(idx % size_x_ > 0 && idx >= size_x_){
@@ -390,13 +381,11 @@ void BoundedExploreLayer::reset(){
 
 bool BoundedExploreLayer::updateBoundaryPolygon(geometry_msgs::PolygonStamped polygon_stamped){ 
 
-
     //error out if no transform available between polygon and costmap
     if(!tf_listener_.waitForTransform(layered_costmap_->getGlobalFrameID(), polygon_stamped.header.frame_id,ros::Time::now(),ros::Duration(10))) {
         ROS_ERROR_STREAM("Couldn't transform from "<<layered_costmap_->getGlobalFrameID()<<" to "<< polygon_stamped.header.frame_id);
         return false;
     }
-
 
     //Transform all points of boundary polygon into costmap frame
     geometry_msgs::PointStamped in, out;
@@ -407,35 +396,35 @@ bool BoundedExploreLayer::updateBoundaryPolygon(geometry_msgs::PolygonStamped po
         polygon_.points.push_back(costmap_2d::toPoint32(out.point));
     }
 
-    //Find map size and origin by finding min/max points of polygon
-    double min_x = std::numeric_limits<double>::infinity();
-    double min_y = std::numeric_limits<double>::infinity();
-    double max_x = -std::numeric_limits<double>::infinity();
-    double max_y = -std::numeric_limits<double>::infinity();
 
-    BOOST_FOREACH(geometry_msgs::Point32 point, polygon_.points){
-        min_x = std::min(min_x,(double)point.x);
-        min_y = std::min(min_y,(double)point.y);
-        max_x = std::max(max_x,(double)point.x);
-        max_y = std::max(max_y,(double)point.y);
-    }
-
-    int size_x, size_y;
     //resize the costmap to polygon boundaries
     if(resize_to_boundary_){
         updateOrigin(0,0);
+
+        //Find map size and origin by finding min/max points of polygon
+        double min_x = std::numeric_limits<double>::infinity();
+        double min_y = std::numeric_limits<double>::infinity();
+        double max_x = -std::numeric_limits<double>::infinity();
+        double max_y = -std::numeric_limits<double>::infinity();
+    
+        BOOST_FOREACH(geometry_msgs::Point32 point, polygon_.points){
+            min_x = std::min(min_x,(double)point.x);
+            min_y = std::min(min_y,(double)point.y);
+            max_x = std::max(max_x,(double)point.x);
+            max_y = std::max(max_y,(double)point.y);
+        }
+    
+        int size_x, size_y;
         worldToMapNoBounds(max_x - min_x, max_y - min_y, size_x, size_y);
         //update map size with calculated values, don't change resolution
         layered_costmap_->resizeMap(size_x, size_y, layered_costmap_->getCostmap()->getResolution(), min_x, min_y);
         //updateOrigin(min_x,min_y);
         matchSize();
-    }else{
-        //resizeMap(size_x, size_y, layered_costmap_->getCostmap()->getResolution(), min_x, min_y);
     }
+    
     configured_ = true;
     marked_ = false;
     return true;
-
 }
 
 
@@ -444,7 +433,7 @@ void BoundedExploreLayer::updateBounds(double robot_x, double robot_y, double ro
 {
 
     if (!enabled_ || !configured_){ return; }
-    //update the entire costmap
+    //update the whole costmap
     *min_x = getOriginX();
     *min_y = getOriginY();
     *max_x = getSizeInMetersX()+getOriginX();
