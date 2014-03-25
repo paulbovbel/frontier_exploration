@@ -18,7 +18,7 @@
             publish_frequency: 1.0
 
             global_frame: map
-            robot_base_frame: casper_base_link
+            robot_base_frame: base_link
             resolution: 0.05
 
             #Must be rolling and track unknown space to work with BoundedExploreLayer
@@ -36,7 +36,8 @@
 
             static:
                 #Can pull data from static map or another non-rolling costmap, make sure global_frame is the same
-                map_topic: /map
+                
+                #map_topic: /map
                 map_topic: casper_move_base/global_costmap/costmap   
                 subscribe_to_updates: true
 

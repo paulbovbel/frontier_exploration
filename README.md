@@ -1,15 +1,15 @@
-frontier-exploration
+frontier_exploration
 ====================
 
-Implementation of frontier exploration for ROS using a costmap_2d layer plugin (hydro required).
+Implementation of frontier exploration (http://www.robotfrontier.com/papers/cira97.pdf) for ROS Hydro, extending on the existing navigation stack (costmap_2d, move_base).
 
-Runs an exploration task in a static or dynamic environment, bounded by a client-defined polygon. Passes movement commands to move_base.
-
-Meant for use with the existing navigation stack (ie costmap_2d, move_base, etc.)
+The explor_server loads a costmap with an additional plugin layer that maintains the exploration bounds and reports on the next available frontier to visit.
 
 Requires a sensor to clear away explored space and mark obstacles.
 
 Exploration is optionally bounded by providing a polygon in the action server goal.
+
+
 
 TODO:
 

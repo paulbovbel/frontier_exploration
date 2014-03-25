@@ -134,14 +134,17 @@ namespace frontier_exploration
         //set goal pose to next frontier
         next_frontier.header.frame_id = layered_costmap_->getGlobalFrameID();
         next_frontier.header.stamp = ros::Time::now();
-        next_frontier.pose.position = selected.initial;
-        //    if(frontier_travel_point_ == "closest"){
-        //        next_frontier.pose.position = selected.initial;
-        //    }else if(frontier_travel_point_ == "middle"){
-        //        next_frontier.pose.position = selected.middle;
-        //    }else if(frontier_travel_point_ == "centroid"){
-        //        next_frontier.pose.position = selected.centroid;
-        //    }
+
+        if(frontier_travel_point_ == "closest"){
+            next_frontier.pose.position = selected.initial;
+        }else if(frontier_travel_point_ == "middle"){
+            next_frontier.pose.position = selected.middle;
+        }else if(frontier_travel_point_ == "centroid"){
+            next_frontier.pose.position = selected.centroid;
+        }else{
+            ROS_WARN("Falling back to closest frontier selection");
+            next_frontier.pose.position = selected.initial;
+        }
 
 
         next_frontier.pose.position.z = 0;
