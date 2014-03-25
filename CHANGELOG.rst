@@ -2,6 +2,14 @@
 Changelog for package frontier_exploration
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* remove robot specific names
+* remove raytrace and obstacle range params
+* reintroduce frontier selection parametrization
+* added client for rviz interaction via point tool
+* Contributors: Paul Bovbel
+
 0.0.3 (2014-03-25)
 ------------------
 * parametrize method of selecting frontier point to travel to
@@ -9,7 +17,7 @@ Changelog for package frontier_exploration
 * remove unnecessary costmap copying
 * remove debug messages, update comments
 * update package name
-* Contributors: Paul Bovbel, agentx3r
+* Contributors: Paul Bovbel
 
 0.0.2 (2014-03-21)
 ------------------
@@ -36,4 +44,4 @@ Changelog for package frontier_exploration
 * expanded comments, cleaned up temp files
 * Initial documentation
 * Initial commit
-* Contributors: Paul Bovbel, agentx3r
+* Contributors: Paul Bovbel
