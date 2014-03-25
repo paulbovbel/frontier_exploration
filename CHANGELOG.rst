@@ -2,8 +2,8 @@
 Changelog for package frontier_exploration
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+0.0.3 (2014-03-25)
+------------------
 * parametrize method of selecting frontier point to travel to
 * use ros msg for Frontier structure
 * remove unnecessary costmap copying
