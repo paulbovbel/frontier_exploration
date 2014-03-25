@@ -45,12 +45,12 @@
                 #if using static map, disable boundary resizing
                 resize_to_boundary: false
                 #frontier point to travel to, valid - 'closest', 'middle', or 'centroid'
-                frontier_travel_point: initial
+                frontier_travel_point: closest
 
             explore_sensor:
                 #sensor range determines how much map is cleared out during exploration, make sure to enable inf_is_valid if necessary
                 observation_sources: laser
-                laser: {data_type: LaserScan, clearing: true, marking: true, topic: scan, inf_is_valid: true, raytrace_range: 1.0, obstacle_range: 1.0}
+                laser: {data_type: LaserScan, clearing: true, marking: true, topic: scan, inf_is_valid: true}
 
             inflation:
                 inflation_radius: 0.15
