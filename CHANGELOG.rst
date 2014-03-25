@@ -2,8 +2,8 @@
 Changelog for package frontier_exploration
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+0.0.4 (2014-03-25)
+------------------
 * remove robot specific names
 * remove raytrace and obstacle range params
 * reintroduce frontier selection parametrization
