@@ -45,6 +45,7 @@ void BoundedExploreLayer::onInitialize()
     matchSize();
 
     nh_.param<bool>("resize_to_boundary", resize_to_boundary_, false);
+    nh_.param<std::string>("frontier_travel_point", frontier_travel_point_, "initial");
 
     polygonService_ = nh_.advertiseService("update_boundary_polygon", &BoundedExploreLayer::updateBoundaryPolygonService, this);
     frontierService_ = nh_.advertiseService("get_next_frontier", &BoundedExploreLayer::getNextFrontierService, this);
@@ -129,8 +130,16 @@ bool BoundedExploreLayer::getNextFrontier(geometry_msgs::PoseStamped start_pose,
     //set goal pose to next frontier
     next_frontier.header.frame_id = layered_costmap_->getGlobalFrameID();
     next_frontier.header.stamp = ros::Time::now();
-    next_frontier.pose.position.x = selected.initial.x;
-    next_frontier.pose.position.y = selected.initial.y;
+
+    if(frontier_travel_point_ == "initial"){
+        next_frontier.pose.position = selected.initial;
+    }else if(frontier_travel_point_ == "middle"){
+        next_frontier.pose.position = selected.middle;
+    }else if(frontier_travel_point_ == "centroid"){
+        next_frontier.pose.position = selected.centroid;
+    }
+
+
     next_frontier.pose.position.z = 0;
 
     //set set goal pose yaw tangent to path between two points

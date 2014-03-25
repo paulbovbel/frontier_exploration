@@ -72,10 +72,9 @@ private:
 
     bool configured_, marked_;
 
+    std::string frontier_travel_point_;
     bool resize_to_boundary_;
     void reconfigureCB(costmap_2d::GenericPluginConfig &config, uint32_t level);
-
-
 
     /**
      * @brief ROS Service wrapper for updateBoundaryPolygon
