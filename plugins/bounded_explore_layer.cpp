@@ -45,7 +45,7 @@ void BoundedExploreLayer::onInitialize()
     matchSize();
 
     nh_.param<bool>("resize_to_boundary", resize_to_boundary_, false);
-    nh_.param<std::string>("frontier_travel_point", frontier_travel_point_, "initial");
+    nh_.param<std::string>("frontier_travel_point", frontier_travel_point_, "closest");
 
     polygonService_ = nh_.advertiseService("update_boundary_polygon", &BoundedExploreLayer::updateBoundaryPolygonService, this);
     frontierService_ = nh_.advertiseService("get_next_frontier", &BoundedExploreLayer::getNextFrontierService, this);
@@ -131,7 +131,7 @@ bool BoundedExploreLayer::getNextFrontier(geometry_msgs::PoseStamped start_pose,
     next_frontier.header.frame_id = layered_costmap_->getGlobalFrameID();
     next_frontier.header.stamp = ros::Time::now();
 
-    if(frontier_travel_point_ == "initial"){
+    if(frontier_travel_point_ == "closest"){
         next_frontier.pose.position = selected.initial;
     }else if(frontier_travel_point_ == "middle"){
         next_frontier.pose.position = selected.middle;

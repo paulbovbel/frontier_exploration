@@ -39,6 +39,8 @@
         explore_boundary:
             #if using static map, disable boundary resizing
             resize_to_boundary: false
+            #frontier point to travel to, valid - 'closest', 'middle', or 'centroid'
+            frontier_travel_point: initial
 
         explore_sensor:
             #sensor range determines how much map is cleared out during exploration, make sure to enable inf_is_valid if necessary
