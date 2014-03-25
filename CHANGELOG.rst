@@ -2,6 +2,11 @@
 Changelog for package frontier_exploration
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* added install target for client
+* Contributors: Paul Bovbel
+
 0.0.4 (2014-03-25)
 ------------------
 * remove robot specific names
