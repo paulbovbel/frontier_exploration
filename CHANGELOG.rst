@@ -2,11 +2,18 @@
 Changelog for package frontier_exploration
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* parametrize method of selecting frontier point to travel to
+* use ros msg for Frontier structure
+* remove unnecessary costmap copying
+* remove debug messages, update comments
+* update package name
+* Contributors: Paul Bovbel, agentx3r
+
 0.0.2 (2014-03-21)
 ------------------
 * fix locking issue
-* fix building
-* fix building
 * rename package
 * update dependencies
 * move sample parameters to launch file
@@ -18,8 +25,6 @@ Changelog for package frontier_exploration
 * refactored message names
 * add resize parameter for using layer with external maps
 * refactor names
-* Update README.md
-* Delete explore_costmap.yaml~
 * remove even more debug code
 * remove debug code
 * remove debug points
