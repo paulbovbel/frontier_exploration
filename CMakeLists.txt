@@ -60,6 +60,9 @@ target_link_libraries(explore_costmap ${catkin_LIBRARIES} ${PCL_LIBRARIES} ${Boo
 add_executable(explore_server src/explore_server.cpp)
 target_link_libraries(explore_server ${catkin_LIBRARIES})
 
+add_executable(explore_client src/explore_client.cpp)
+target_link_libraries(explore_client ${catkin_LIBRARIES})
+
 install(TARGETS explore_server
         RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION})
 

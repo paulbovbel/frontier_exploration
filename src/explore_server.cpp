@@ -24,19 +24,24 @@ public:
     ExampleExplorationServer(std::string name) :
         tf_listener_(ros::Duration(10.0)),
         private_nh_("~"),
-        as_(nh_, name, boost::bind(&ExampleExplorationServer::executeCB, this, _1), false),
-        action_name_(name)
+        explore_costmap_ros_(0),
+        as_(nh_, name, boost::bind(&ExampleExplorationServer::executeCB, this, _1), false)
     {
         as_.start();
     }
 
-protected:
+    ~ExampleExplorationServer(){
+        delete explore_costmap_ros_;
+    }
+
+private:
 
     ros::NodeHandle nh_;
     ros::NodeHandle private_nh_;
     tf::TransformListener tf_listener_;
     actionlib::SimpleActionServer<frontier_exploration::ExploreTaskAction> as_;
-    std::string action_name_;
+
+    costmap_2d::Costmap2DROS* explore_costmap_ros_;
 
     /**
      * @brief Performs frontier exploration action using exploration costmap layer
@@ -45,35 +50,14 @@ protected:
     void executeCB(const frontier_exploration::ExploreTaskGoalConstPtr &goal)
     {
 
-        int retry;
         //create exploration costmap
-        costmap_2d::Costmap2DROS explore_costmap_ros("explore_costmap", tf_listener_);
+        if(!explore_costmap_ros_){
+            explore_costmap_ros_ = new costmap_2d::Costmap2DROS("explore_costmap", tf_listener_);
+        }else{
+            explore_costmap_ros_->resetLayers();
+        }
 
-        //wait for boundary service to come online
-        ros::ServiceClient updateBoundaryPolygon = private_nh_.serviceClient<frontier_exploration::UpdateBoundaryPolygon>("explore_costmap/explore_boundary/update_boundary_polygon");
-        if(!updateBoundaryPolygon.waitForExistence()){
-            as_.setAborted();
-            return;
-        }
-        //set region boundary on costmap
-        retry = 5;
-        while(ros::ok() && !as_.isPreemptRequested()){
-            frontier_exploration::UpdateBoundaryPolygon srv;
-            srv.request.explore_boundary = goal->explore_boundary;
-            if(updateBoundaryPolygon.call(srv)){
-                ROS_INFO("set region boundary");
-                break;
-            }else{
-                ROS_ERROR("failed to set region boundary");
-                retry--;
-                if(retry == 0 || !ros::ok()){
-                    as_.setAborted();
-                    return;
-                }
-                ROS_WARN("retrying...");
-                ros::Duration(0.5).sleep();
-            }
-        }
+        int retry;
 
         //connect to move_base
         actionlib::SimpleActionClient<move_base_msgs::MoveBaseAction> moveClient("move_base",true);
@@ -89,7 +73,7 @@ protected:
         center_pose.header = goal->explore_center.header;
         center_pose.pose.position = goal->explore_center.point;
         center_pose.pose.orientation = tf::createQuaternionMsgFromYaw(0);
-        while(ros::ok()){
+        while(ros::ok() && !as_.isPreemptRequested()){
             move_base_msgs::MoveBaseGoal moveClientGoal;
             moveClientGoal.target_pose = center_pose;
             ROS_INFO("moving robot to center of region");
@@ -110,6 +94,33 @@ protected:
             }
         }
 
+        //wait for boundary service to come online
+        ros::ServiceClient updateBoundaryPolygon = private_nh_.serviceClient<frontier_exploration::UpdateBoundaryPolygon>("explore_costmap/explore_boundary/update_boundary_polygon");
+        if(!updateBoundaryPolygon.waitForExistence()){
+            as_.setAborted();
+            return;
+        }
+        //set region boundary on costmap
+        retry = 5;
+        while(ros::ok() && !as_.isPreemptRequested()){
+            frontier_exploration::UpdateBoundaryPolygon srv;
+            srv.request.explore_boundary = goal->explore_boundary;
+            ROS_ERROR_STREAM("Boundary size " << srv.request.explore_boundary.polygon.points.size() << " " << srv.request.explore_boundary.header.frame_id);
+            if(updateBoundaryPolygon.call(srv)){
+                ROS_INFO("set region boundary");
+                break;
+            }else{
+                ROS_ERROR("failed to set region boundary");
+                retry--;
+                if(retry == 0 || !ros::ok()){
+                    as_.setAborted();
+                    return;
+                }
+                ROS_WARN("retrying...");
+                ros::Duration(0.5).sleep();
+            }
+        }
+
         //wait for frontier calculation service to come online
         ros::ServiceClient getNextFrontier = private_nh_.serviceClient<frontier_exploration::GetNextFrontier>("explore_costmap/explore_boundary/get_next_frontier");
         if(!getNextFrontier.waitForExistence()){
@@ -119,12 +130,12 @@ protected:
 
         bool success = false;
         //loop until all frontiers are explored (can't find any more)
-        while(ros::ok()){
+        while(ros::ok() && !as_.isPreemptRequested()){
 
             frontier_exploration::GetNextFrontier srv;
             tf::Stamped<tf::Pose> robot_pose;
 
-            explore_costmap_ros.getRobotPose(robot_pose);
+            explore_costmap_ros_->getRobotPose(robot_pose);
             tf::poseStampedTFToMsg(robot_pose,srv.request.start_pose);
 
 
@@ -134,7 +145,7 @@ protected:
             retry = 5;
 
             geometry_msgs::PoseStamped goal_pose;
-            while(ros::ok()){
+            while(ros::ok() && !as_.isPreemptRequested()){
 
                 //check if robot is no longer within exploration boundary, return to center
                 geometry_msgs::PoseStamped eval_pose = srv.request.start_pose;
@@ -169,7 +180,7 @@ protected:
 
             //move halfway to next frontier
             retry = 5;
-            while(ros::ok()){
+            while(ros::ok() && !as_.isPreemptRequested()){
                 ROS_INFO("Moving to exploration goal");
                 move_base_msgs::MoveBaseGoal moveClientGoal;
                 moveClientGoal.target_pose = goal_pose;
@@ -189,6 +200,11 @@ protected:
                     ROS_WARN("retrying...");
                     ros::Duration(0.5).sleep();
                 }
+            }
+
+            if(as_.isPreemptRequested()){
+                as_.setAborted();
+                return;
             }
         }
 
@@ -214,7 +230,7 @@ protected:
 
 int main(int argc, char** argv)
 {
-    ros::init(argc, argv, "frontier_exploration");
+    ros::init(argc, argv, "explore_server");
 
     frontier_exploration::ExampleExplorationServer server(ros::this_node::getName());
     ros::spin();

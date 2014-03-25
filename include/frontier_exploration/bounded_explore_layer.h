@@ -15,10 +15,6 @@
 namespace frontier_exploration
 {
 
-using costmap_2d::LETHAL_OBSTACLE;
-using costmap_2d::NO_INFORMATION;
-using costmap_2d::FREE_SPACE;
-
 //class BoundedExploreLayer : public costmap_2d::Layer, public costmap_2d::Costmap2D
 class BoundedExploreLayer : public costmap_2d::CostmapLayer
 {
