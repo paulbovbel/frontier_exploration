@@ -2,8 +2,6 @@
 
 <launch>
 
-    <group ns="casper">
-
     <node pkg="frontier_exploration" type="explore_client" respawn="false" name="explore_client" output="screen"/>
 
     <node pkg="frontier_exploration" type="explore_server" respawn="false" name="explore_server" output="screen">
@@ -38,7 +36,7 @@
                 #Can pull data from static map or another non-rolling costmap, make sure global_frame is the same
                 
                 #map_topic: /map
-                map_topic: casper_move_base/global_costmap/costmap   
+                map_topic: move_base/global_costmap/costmap   
                 subscribe_to_updates: true
 
             explore_boundary:
@@ -50,12 +48,11 @@
             explore_sensor:
                 #sensor range determines how much map is cleared out during exploration, make sure to enable inf_is_valid if necessary
                 observation_sources: laser
-                laser: {data_type: LaserScan, clearing: true, marking: true, topic: scan, inf_is_valid: true}
+                laser: {data_type: LaserScan, clearing: true, marking: true, topic: scan, inf_is_valid: true, raytrace_range: 1.0, obstacle_range: 1.0}
 
             inflation:
                 inflation_radius: 0.15
       </rosparam>
     </node>
-    
-    </group>
+
 </launch>
