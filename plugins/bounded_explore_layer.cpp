@@ -5,6 +5,8 @@
 
 #include <costmap_2d/costmap_2d.h>
 
+#include <frontier_exploration/Frontier.h>
+
 #include <frontier_exploration/UpdateBoundaryPolygon.h>
 #include <frontier_exploration/GetNextFrontier.h>
 #include <boost/foreach.hpp>
@@ -36,7 +38,7 @@ void BoundedExploreLayer::onInitialize()
 {
 
     ros::NodeHandle nh_("~/" + name_);
-    frontier_cloud = nh_.advertise<sensor_msgs::PointCloud2>("frontiers",5);
+    frontier_cloud_pub = nh_.advertise<sensor_msgs::PointCloud2>("frontiers",5);
     configured_ = false;
     marked_ = false;
     default_value_ = NO_INFORMATION;
@@ -91,44 +93,44 @@ bool BoundedExploreLayer::getNextFrontier(geometry_msgs::PoseStamped start_pose,
         tf_listener_.transformPose(layered_costmap_->getGlobalFrameID(),temp_pose,start_pose);
     }
 
-    std::list<Frontier> frontiers = findFrontiers(start_pose.pose.position, layered_costmap_->getCostmap());
+    std::list<Frontier> frontier_list = findFrontiers(start_pose.pose.position, layered_costmap_->getCostmap());
 
-    if(frontiers.size() == 0){
+    if(frontier_list.size() == 0){
         ROS_DEBUG("No frontiers found, exploration complete");
         return false;
     }
 
-    Frontier out = {};
-    out.min_distance = std::numeric_limits<double>::infinity();
+    Frontier selected;
+    selected.min_distance = std::numeric_limits<double>::infinity();
 
-    pcl::PointCloud<pcl::PointXYZI> cloud;
-    pcl::PointXYZI temp(50);
+    pcl::PointCloud<pcl::PointXYZI> frontier_cloud_viz;
+    pcl::PointXYZI frontier_point_viz(50);
     int max;
 
-    BOOST_FOREACH(Frontier frontier, frontiers){
-        temp.x = frontier.initial_x;
-        temp.y = frontier.initial_y;
-        cloud.push_back(temp);
-        if (frontier.min_distance < out.min_distance){
-            out = frontier;
-            max = cloud.size()-1;
+    BOOST_FOREACH(Frontier frontier, frontier_list){
+        frontier_point_viz.x = frontier.initial.x;
+        frontier_point_viz.y = frontier.initial.y;
+        frontier_cloud_viz.push_back(frontier_point_viz);
+        if (frontier.min_distance < selected.min_distance){
+            selected = frontier;
+            max = frontier_cloud_viz.size()-1;
         }
     }
 
     //color selected frontier
-    cloud[max].intensity = 100;
+    frontier_cloud_viz[max].intensity = 100;
 
-    sensor_msgs::PointCloud2 output;
-    pcl::toROSMsg(cloud,output);
-    output.header.frame_id = layered_costmap_->getGlobalFrameID();
-    output.header.stamp = ros::Time::now();
-    frontier_cloud.publish(output);
+    sensor_msgs::PointCloud2 frontier_viz_output;
+    pcl::toROSMsg(frontier_cloud_viz,frontier_viz_output);
+    frontier_viz_output.header.frame_id = layered_costmap_->getGlobalFrameID();
+    frontier_viz_output.header.stamp = ros::Time::now();
+    frontier_cloud_pub.publish(frontier_viz_output);
 
     //set goal pose to next frontier
     next_frontier.header.frame_id = layered_costmap_->getGlobalFrameID();
     next_frontier.header.stamp = ros::Time::now();
-    next_frontier.pose.position.x = out.initial_x;
-    next_frontier.pose.position.y = out.initial_y;
+    next_frontier.pose.position.x = selected.initial.x;
+    next_frontier.pose.position.y = selected.initial.y;
     next_frontier.pose.position.z = 0;
 
     //set set goal pose yaw tangent to path between two points
@@ -159,18 +161,18 @@ std::list<Frontier> BoundedExploreLayer::findFrontiers(geometry_msgs::Point posi
         return frontier_list;
     }
 
-    //make sure costmap state is consistent
+    //make sure costmap is consistent and locked
     boost::unique_lock < boost::shared_mutex > lock(*(costmap->getLock()));
     unsigned char* map = costmap->getCharMap();
 
-    //make copy of costmap for searching
+    //initialize flag arrays to keep track of visited and frontier cells
     bool frontier_flag[size_x_ * size_y_];
-    bool visited_flag[size_x_ * size_y_];
-
     memset(frontier_flag, false, sizeof(bool) * size_x_ * size_y_);
+
+    bool visited_flag[size_x_ * size_y_];
     memset(visited_flag, false, sizeof(bool) * size_x_ * size_y_);
 
-    //instert index of initial position into queue for breadth-first-search
+    //initialize breadth first esearch
     std::queue<unsigned int> bfs;
     unsigned int robot = getIndex(mx,my);
 
@@ -190,11 +192,13 @@ std::list<Frontier> BoundedExploreLayer::findFrontiers(geometry_msgs::Point posi
 
         //iterate over 4-connected neighbourhood
         BOOST_FOREACH(unsigned nbr, nhood4(idx)){
-            //add to queue all free, unvisited cells
-            if(map[nbr] == FREE_SPACE && !visited_flag[nbr]){
+            //add to queue all free, unvisited cells, use descending search in case initialized on non-free cell
+            if(map[nbr] <= map[idx] && !visited_flag[nbr]){
                 visited_flag[nbr] = true;
                 bfs.push(nbr);
+            //check if cell is new frontier cell (unvisited, NO_INFORMATION, free neighbour)
             }else if(isNewFrontierCell(nbr,frontier_flag,map)){
+                frontier_flag[nbr] = true;
                 Frontier new_frontier = buildFrontier(nbr, robot, frontier_flag,map);
                 if(new_frontier.size > 1){
                     frontier_list.push_back(new_frontier);
@@ -208,14 +212,16 @@ std::list<Frontier> BoundedExploreLayer::findFrontiers(geometry_msgs::Point posi
 Frontier BoundedExploreLayer::buildFrontier(unsigned int initial_cell, unsigned int robot, bool* frontier_flag, const unsigned char* map){
 
     //initialize frontier structure
-    Frontier out = {};
-    out.size = 1;
-    out.min_distance = std::numeric_limits<double>::infinity();
+    Frontier output;
+    output.centroid.x = 0;
+    output.centroid.y = 0;
+    output.size = 1;
+    output.min_distance = std::numeric_limits<double>::infinity();
 
     //record initial contact point for frontier
     unsigned int ix, iy;
     indexToCells(initial_cell,ix,iy);
-    mapToWorld(ix,iy,out.initial_x,out.initial_y);
+    mapToWorld(ix,iy,output.initial.x,output.initial.y);
 
     //push initial gridcell onto queue
     std::queue<unsigned int> bfs;
@@ -233,9 +239,10 @@ Frontier BoundedExploreLayer::buildFrontier(unsigned int initial_cell, unsigned 
 
         //try adding cells in 8-connected neighborhood to frontier
         BOOST_FOREACH(unsigned int nbr, nhood8(idx)){
+            //check if neighbour is a potential frontier cell
             if(isNewFrontierCell(nbr,frontier_flag, map)){
 
-                //mark gridcell as frontier
+                //mark cell as frontier
                 frontier_flag[nbr] = true;
                 unsigned int mx,my;
                 double wx,wy;
@@ -243,28 +250,30 @@ Frontier BoundedExploreLayer::buildFrontier(unsigned int initial_cell, unsigned 
                 mapToWorld(mx,my,wx,wy);
 
                 //update frontier size
-                out.size++;
+                output.size++;
 
                 //update centroid of frontier
-                out.centroid_x += wx;
-                out.centroid_y += wy;
-                bfs.push(nbr);
+                output.centroid.x += wx;
+                output.centroid.y += wy;
 
                 //determine frontier's distance from robot, going by closest gridcell to robot
                 double distance = sqrt(pow((double(robot_x)-double(wx)),2.0) + pow((double(robot_y)-double(wy)),2.0));
-                if(distance < out.min_distance){
-                    out.min_distance = distance;
-                    out.middle_x = wx;
-                    out.middle_y = wy;
+                if(distance < output.min_distance){
+                    output.min_distance = distance;
+                    output.middle.x = wx;
+                    output.middle.y = wy;
                 }
+
+                //add to queue for breadth first search
+                bfs.push(nbr);
             }
         }
     }
 
     //average out frontier centroid
-    out.centroid_x /= out.size;
-    out.centroid_y /= out.size;
-    return out;
+    output.centroid.x /= output.size;
+    output.centroid.y /= output.size;
+    return output;
 }
 
 bool BoundedExploreLayer::isNewFrontierCell(unsigned int idx, bool* frontier_flag, const unsigned char* map){
@@ -287,13 +296,16 @@ bool BoundedExploreLayer::isNewFrontierCell(unsigned int idx, bool* frontier_fla
 
 bool BoundedExploreLayer::nearestCell(unsigned int &result, unsigned int start, unsigned char val, const unsigned char* map){
 
+    //initialize breadth first search
+    std::queue<unsigned int> bfs;
     bool visited_flag[size_x_ * size_y_];
     memset(visited_flag, false, sizeof(bool) * size_x_ * size_y_);
 
-    std::queue<unsigned int> bfs;
+    //push initial cell
     bfs.push(start);
     visited_flag[start] = true;
 
+    //search for neighbouring cell matching value
     while(!bfs.empty()){
         unsigned int idx = bfs.front();
         bfs.pop();

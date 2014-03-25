@@ -8,6 +8,7 @@
 #include <costmap_2d/costmap_layer.h>
 
 #include <geometry_msgs/Polygon.h>
+#include <frontier_exploration/Frontier.h>
 #include <frontier_exploration/UpdateBoundaryPolygon.h>
 #include <frontier_exploration/GetNextFrontier.h>
 
@@ -17,22 +18,6 @@ namespace frontier_exploration
 using costmap_2d::LETHAL_OBSTACLE;
 using costmap_2d::NO_INFORMATION;
 using costmap_2d::FREE_SPACE;
-
-static const unsigned char VISITED = FREE_SPACE + 1;
-static const unsigned char FRONTIER = FREE_SPACE + 2;
-
-/**
- * @brief Frontier structure contains relevant statistics about a detected frontier, including size-in-cells, minimum distance to robot, centroid, and middle point
- */
-struct Frontier {
-
-    unsigned int size;
-    double min_distance;
-    double initial_x, initial_y;
-    double centroid_x, centroid_y;
-    double middle_x, middle_y;
-
-};
 
 //class BoundedExploreLayer : public costmap_2d::Layer, public costmap_2d::Costmap2D
 class BoundedExploreLayer : public costmap_2d::CostmapLayer
@@ -54,6 +39,10 @@ public:
     }
 
     virtual void matchSize();
+
+    /**
+     * @brief Reset exploration progress
+     */
     virtual void reset();
 
     /**
@@ -79,7 +68,7 @@ private:
     geometry_msgs::Polygon polygon_;
     tf::TransformListener tf_listener_;
 
-    ros::Publisher frontier_cloud;
+    ros::Publisher frontier_cloud_pub;
 
     bool configured_, marked_;
 
