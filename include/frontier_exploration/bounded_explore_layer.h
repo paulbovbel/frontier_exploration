@@ -5,6 +5,7 @@
 #include <costmap_2d/layered_costmap.h>
 #include <costmap_2d/GenericPluginConfig.h>
 #include <dynamic_reconfigure/server.h>
+#include <costmap_2d/costmap_layer.h>
 
 #include <geometry_msgs/Polygon.h>
 #include <frontier_exploration/UpdateBoundaryPolygon.h>
@@ -33,7 +34,8 @@ struct Frontier {
 
 };
 
-class BoundedExploreLayer : public costmap_2d::Layer, public costmap_2d::Costmap2D
+//class BoundedExploreLayer : public costmap_2d::Layer, public costmap_2d::Costmap2D
+class BoundedExploreLayer : public costmap_2d::CostmapLayer
 {
 public:
     BoundedExploreLayer();
@@ -84,15 +86,7 @@ private:
     bool resize_to_boundary_;
     void reconfigureCB(costmap_2d::GenericPluginConfig &config, uint32_t level);
 
-    /**
-     * @brief Initialize costmap with exploration data, specifically boundaries and unknown cells
-     * @param master_grid Reference to master costmap
-     * @param min_i
-     * @param min_j
-     * @param max_i
-     * @param max_j
-     */
-    void fillGaps(costmap_2d::Costmap2D& master_grid, int min_i, int min_j, int max_i, int max_j);
+
 
     /**
      * @brief ROS Service wrapper for updateBoundaryPolygon
@@ -103,11 +97,22 @@ private:
     bool updateBoundaryPolygonService(frontier_exploration::UpdateBoundaryPolygon::Request &req, frontier_exploration::UpdateBoundaryPolygon::Response &res);
 
     /**
+     * @brief Initialize costmap with exploration data, overwriting all but lethal obstacles from other layers
+     * @param master_grid Reference to master costmap
+     * @param min_i
+     * @param min_j
+     * @param max_i
+     * @param max_j
+     */
+    void mapUpdateKeepObstacles(costmap_2d::Costmap2D& master_grid, int min_i, int min_j, int max_i, int max_j);
+
+    /**
      * @brief ROS Service wrapper for getNextFrontier
      * @param req Service request
      * @param res Service response
      * @return true on service success, false otherwise
      */
+
     bool getNextFrontierService(frontier_exploration::GetNextFrontier::Request &req, frontier_exploration::GetNextFrontier::Response &res);
 
     /**
@@ -125,7 +130,7 @@ private:
      * @param map Reference to map data
      * @return Frontier structure containing infromation about the marked cells
      */
-    Frontier buildFrontier(unsigned int idx, unsigned int robot, unsigned char* map);
+    Frontier buildFrontier(unsigned int initial_cell, unsigned int robot, bool* frontier_flag, const unsigned char* map);
 
     /**
       * @brief Evaluate if candidate cell is a valid frontier
@@ -133,7 +138,7 @@ private:
       * @param map Reference to map data
       * @return True if frontier cell
       */
-    bool isFrontier(unsigned int idx, unsigned char* map);
+    bool isNewFrontierCell(unsigned int idx, bool* frontier_flag, const unsigned char* map);
 
     /**
      * @brief Find nearest cell of specified value
@@ -143,7 +148,7 @@ private:
      * @param map Reference to map data
      * @return
      */
-    bool nearestCell(unsigned int &ret, unsigned int idx, unsigned char val, const unsigned char* map);
+    bool nearestCell(unsigned int &result, unsigned int start, unsigned char val, const unsigned char* map);
 
     /**
     * @brief Determine 4-neighbourhood of an input cell, checking for map edges

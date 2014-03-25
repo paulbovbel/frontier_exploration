@@ -16,6 +16,11 @@ find_package(catkin REQUIRED COMPONENTS
 find_package(Boost REQUIRED COMPONENTS system)
 find_package(PCL REQUIRED)
 
+add_message_files(
+  FILES
+  Frontier.msg
+)
+
 add_service_files(
   FILES
   UpdateBoundaryPolygon.srv
