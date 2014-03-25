@@ -22,7 +22,7 @@
 
         plugins: 
 
-            - {name: explore_boundary,        type: "robot_explore::BoundedExploreLayer"}
+            - {name: explore_boundary,        type: "frontier_exploration::BoundedExploreLayer"}
 
             #Must have external map or some sort of sensor to clear out obstacles
             - {name: static,                  type: "costmap_2d::StaticLayer"}            
