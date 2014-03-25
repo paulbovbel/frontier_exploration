@@ -63,7 +63,7 @@ target_link_libraries(explore_server ${catkin_LIBRARIES})
 add_executable(explore_client src/explore_client.cpp)
 target_link_libraries(explore_client ${catkin_LIBRARIES})
 
-install(TARGETS explore_server
+install(TARGETS explore_server explore_client
         RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION})
 
 install(TARGETS explore_costmap
