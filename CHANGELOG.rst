@@ -2,8 +2,8 @@
 Changelog for package frontier_exploration
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+0.1.1 (2014-03-26)
+------------------
 * fix build dependency
 * eliminate redundant move_base goal updates, fix locking
 * externalize static for geometric calculations
