@@ -382,12 +382,14 @@ namespace frontier_exploration
 
         marked_ = false;
         configured_ = false;
-        polygon_.points.clear();
         memset(costmap_, default_value_, size_x_ * size_y_ * sizeof(unsigned char));
 
     }
 
     bool BoundedExploreLayer::updateBoundaryPolygon(geometry_msgs::PolygonStamped polygon_stamped){
+
+        polygon_.points.clear();
+
         //error out if no transform available between polygon and costmap
         if(!tf_listener_.waitForTransform(layered_costmap_->getGlobalFrameID(), polygon_stamped.header.frame_id,ros::Time::now(),ros::Duration(10))) {
             ROS_ERROR_STREAM("Couldn't transform from "<<layered_costmap_->getGlobalFrameID()<<" to "<< polygon_stamped.header.frame_id);
@@ -401,6 +403,20 @@ namespace frontier_exploration
             in.point = costmap_2d::toPoint(point32);
             tf_listener_.transformPoint(layered_costmap_->getGlobalFrameID(),in,out);
             polygon_.points.push_back(costmap_2d::toPoint32(out.point));
+        }
+
+        //if empty boundary provided, set to whole map
+        if(polygon_.points.empty()){
+            geometry_msgs::Point32 temp;
+            temp.x = getOriginX();
+            temp.y = getOriginY();
+            polygon_.points.push_back(temp);
+            temp.y = getSizeInMetersY();
+            polygon_.points.push_back(temp);
+            temp.x = getSizeInMetersX();
+            polygon_.points.push_back(temp);
+            temp.y = getOriginY();
+            polygon_.points.push_back(temp);
         }
 
         if(resize_to_boundary_){
