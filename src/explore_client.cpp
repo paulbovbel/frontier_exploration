@@ -47,6 +47,8 @@ public:
         private_nh_("~"),
         waiting_for_center_(false)
     {
+
+        input_.header.frame_id = "map";
         private_nh_.param<double>("proximity", proximity_, 0.2);
         point_ = nh_.subscribe("/clicked_point",10,&FrontierExplorationClient::pointCb, this);
         point_viz_pub_ = nh_.advertise<visualization_msgs::Marker>("exploration_polygon_marker", 10);
@@ -58,7 +60,6 @@ public:
         visualization_msgs::Marker points, line_strip;
 
         points.header = line_strip.header = input_.header;
-
         points.ns = line_strip.ns = "explore_points";
 
         points.id = 0;
@@ -68,33 +69,22 @@ public:
         points.type = visualization_msgs::Marker::SPHERE_LIST;
         line_strip.type = visualization_msgs::Marker::LINE_STRIP;
 
-
         if(!input_.polygon.points.empty()){
 
             points.action = line_strip.action = visualization_msgs::Marker::ADD;
             points.pose.orientation.w = line_strip.pose.orientation.w = 1.0;
 
-            // POINTS markers use x and y scale for width/height respectively
             points.scale.x = 0.2;
-            points.scale.y = 0.2;
-            points.scale.z = 0.2;
+            line_strip.scale.x = 0.05;
 
-            // LINE_STRIP/LINE_LIST markers use only the x component of scale, for the line width
-            line_strip.scale.x = 0.1;
-            line_strip.scale.y = 1.0;
-            line_strip.scale.z = 1.0;
-
-            // Points are green
-            points.color.g = 1.0f;
             points.color.a = 1.0;
-
-            // Line strip is blue
+            points.color.b = 1.0;
             line_strip.color.b = 1.0;
             line_strip.color.a = 1.0;
 
+            points.points.push_back(costmap_2d::toPoint(input_.polygon.points.front()));
 
             BOOST_FOREACH(geometry_msgs::Point32 point, input_.polygon.points){
-                points.points.push_back(costmap_2d::toPoint(point));
                 line_strip.points.push_back(costmap_2d::toPoint(point));
             }
 
