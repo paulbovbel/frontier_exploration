@@ -2,13 +2,15 @@
 
 <launch>
 
+    <group ns="casper">
+
     <node pkg="frontier_exploration" type="explore_client" respawn="false" name="explore_client" output="screen">
         <param name="proximity" type="double" value="0.2"/>
     </node>
 
-    <node pkg="frontier_exploration" type="explore_server" respawn="false" name="explore_server" output="screen">
+    <node pkg="frontier_exploration" type="explore_server" respawn="false" name="explore_server" output="screen" >
 
-        <param name="frequency" type="double" value="1.0"/>
+        <param name="frequency" type="double" value="0.0"/>
 
         <rosparam ns="explore_costmap">
             #Sample parameters
@@ -20,7 +22,7 @@
             publish_frequency: 1.0
 
             global_frame: map
-            robot_base_frame: base_link
+            robot_base_frame: casper_base_link
             resolution: 0.05
 
             #Must be rolling and track unknown space to work with BoundedExploreLayer
@@ -29,18 +31,19 @@
 
             plugins: 
 
-                #Must have external map or some sort of sensor to clear out obstacles
+                #Static map optional, but should be first if present
                 - {name: static,                  type: "costmap_2d::StaticLayer"}            
                 - {name: explore_boundary,        type: "frontier_exploration::BoundedExploreLayer"}
+                #Must have some sort of sensor to clear out obstacles
                 - {name: explore_sensor,          type: "costmap_2d::ObstacleLayer"}
-
+                #inflation recommended to fill any gaps
                 - {name: inflation,               type: "costmap_2d::InflationLayer"}
 
             static:
                 #Can pull data from static map or another non-rolling costmap, make sure global_frame is the same
                 
-                #map_topic: /map
-                map_topic: move_base/global_costmap/costmap   
+                map_topic: /map
+                #map_topic: move_base/global_costmap/costmap   
                 subscribe_to_updates: true
 
             explore_boundary:
@@ -58,5 +61,7 @@
                 inflation_radius: 0.15
       </rosparam>
     </node>
+
+    </group>
 
 </launch>

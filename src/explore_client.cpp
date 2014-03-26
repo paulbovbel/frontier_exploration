@@ -6,6 +6,8 @@
 #include <geometry_msgs/PolygonStamped.h>
 #include <geometry_msgs/PointStamped.h>
 
+#include <frontier_exploration/geometry_tools.h>
+
 #include <frontier_exploration/ExploreTaskAction.h>
 #include <frontier_exploration/ExploreTaskActionGoal.h>
 #include <frontier_exploration/GetNextFrontier.h>
@@ -22,7 +24,7 @@
 
 namespace frontier_exploration{
 
-class ExampleExplorationClient{
+class FrontierExplorationClient{
 
 private:
 
@@ -37,18 +39,18 @@ private:
     double proximity_;
 
     bool waiting_for_center_;
+
 public:
 
-
-    ExampleExplorationClient() :
+    FrontierExplorationClient() :
         nh_(),
         private_nh_("~"),
         waiting_for_center_(false)
     {
         private_nh_.param<double>("proximity", proximity_, 0.2);
-        point_ = nh_.subscribe("/clicked_point",10,&ExampleExplorationClient::pointCb, this);
+        point_ = nh_.subscribe("/clicked_point",10,&FrontierExplorationClient::pointCb, this);
         point_viz_pub_ = nh_.advertise<visualization_msgs::Marker>("exploration_polygon_marker", 10);
-        point_viz_timer_ = nh_.createWallTimer(ros::WallDuration(0.1), boost::bind(&ExampleExplorationClient::pointVizCb, this));
+        point_viz_timer_ = nh_.createWallTimer(ros::WallDuration(0.1), boost::bind(&FrontierExplorationClient::pointVizCb, this));
     }
 
     void pointVizCb(){
@@ -95,6 +97,7 @@ public:
                 points.points.push_back(costmap_2d::toPoint(point));
                 line_strip.points.push_back(costmap_2d::toPoint(point));
             }
+
             if(waiting_for_center_){
                 line_strip.points.push_back(costmap_2d::toPoint(input_.polygon.points.front()));
             }
@@ -105,7 +108,6 @@ public:
         }
         point_viz_pub_.publish(points);
         point_viz_pub_.publish(line_strip);
-
 
     }
 
@@ -135,7 +137,7 @@ public:
             ROS_ERROR("Frame mismatch, restarting polygon selection");
             input_.polygon.points.clear();
 
-        }else if(input_.polygon.points.size() > 1 && pointsAdjacent(costmap_2d::toPoint(input_.polygon.points.front()), point->point)){
+        }else if(input_.polygon.points.size() > 1 && pointsAdjacent(costmap_2d::toPoint(input_.polygon.points.front()), point->point, proximity_)){
             if(input_.polygon.points.size() < 3){
                 ROS_ERROR("Not a valid polygon, restarting");
                 input_.polygon.points.clear();
@@ -151,23 +153,6 @@ public:
 
     }
 
-
-    bool pointsAdjacent(geometry_msgs::Point one, geometry_msgs::Point two){
-        double distance = sqrt(pow(one.x-two.x,2.0) + pow(one.y-two.y,2.0));
-        return distance < proximity_;
-    }
-
-    bool pointInPolygon(geometry_msgs::Point point, geometry_msgs::Polygon polygon){
-        int cross = 0;
-        for (int i = 0, j = polygon.points.size()-1; i < polygon.points.size(); j = i++) {
-            if ( ((polygon.points[i].y > point.y) != (polygon.points[j].y>point.y)) &&
-                 (point.x < (polygon.points[j].x-polygon.points[i].x) * (point.y-polygon.points[i].y) / (polygon.points[j].y-polygon.points[i].y) + polygon.points[i].x) ){
-                cross++;
-            }
-        }
-        return bool(cross % 2);
-    }
-
 };
 
 }
@@ -176,7 +161,7 @@ int main(int argc, char** argv)
 {
     ros::init(argc, argv, "explore_client");
 
-    frontier_exploration::ExampleExplorationClient client;
+    frontier_exploration::FrontierExplorationClient client;
     ros::spin();
     return 0;
 }

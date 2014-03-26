@@ -5,7 +5,6 @@
 #include <costmap_2d/layered_costmap.h>
 #include <costmap_2d/GenericPluginConfig.h>
 #include <dynamic_reconfigure/server.h>
-#include <costmap_2d/costmap_layer.h>
 
 #include <geometry_msgs/Polygon.h>
 #include <frontier_exploration/Frontier.h>
@@ -15,8 +14,7 @@
 namespace frontier_exploration
 {
 
-//class BoundedExploreLayer : public costmap_2d::Layer, public costmap_2d::Costmap2D
-class BoundedExploreLayer : public costmap_2d::CostmapLayer
+class BoundedExploreLayer : public costmap_2d::Layer, public costmap_2d::Costmap2D
 {
 public:
     BoundedExploreLayer();

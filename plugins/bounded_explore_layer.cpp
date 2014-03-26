@@ -426,7 +426,10 @@ namespace frontier_exploration
             double max_y = -std::numeric_limits<double>::infinity();
 
             BOOST_FOREACH(geometry_msgs::Point32 point, polygon_.points){
-                touch(point.x,point.y,&min_x,&min_y,&max_x,&max_y);
+                min_x = std::min(min_x,(double)point.x);
+                 min_y = std::min(min_y,(double)point.y);
+                 max_x = std::max(max_x,(double)point.x);
+                 max_y = std::max(max_y,(double)point.y);
             }
 
             //resize the costmap to polygon boundaries, don't change resolution
