@@ -32,6 +32,7 @@ public:
         retry_(5)
     {
         private_nh_.param<double>("frequency", frequency_, 0.0);
+        private_nh_.param<double>("goal_aliasing", goal_aliasing_, 0.1);
         as_.registerPreemptCallback(boost::bind(&FrontierExplorationServer::preemptCb, this));
         as_.start();
     }
@@ -48,7 +49,7 @@ private:
     actionlib::SimpleActionServer<frontier_exploration::ExploreTaskAction> as_;
 
     costmap_2d::Costmap2DROS* explore_costmap_ros_;
-    double frequency_;
+    double frequency_, goal_aliasing_;
     bool success_;
     int retry_;
 
@@ -161,7 +162,7 @@ private:
             }
 
             //check if new goal is close to old goal, hence no need to resend
-            if(!pointsAdjacent(move_client_goal_.target_pose.pose.position,goal_pose.pose.position,0.1)){
+            if(!pointsAdjacent(move_client_goal_.target_pose.pose.position,goal_pose.pose.position,goal_aliasing_)){
                 ROS_DEBUG("New exploration goal");
                 move_client_goal_.target_pose = goal_pose;
                 boost::unique_lock<boost::mutex> lock(move_client_lock_);
