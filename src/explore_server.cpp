@@ -128,7 +128,7 @@ private:
         if(!getNextFrontier.waitForExistence()){
             as_.setAborted();
             return;
-        };
+        }
 
         //loop until all frontiers are explored (can't find any more)
         while(ros::ok() && !as_.isPreemptRequested()){
@@ -188,7 +188,12 @@ private:
             
                 if(frequency_ <= 0){
                     //only get new goal when reached previously found frontier
-                    moveClient.sendGoalAndWait(moveClientGoal);                
+                    moveClient.sendGoal(moveClientGoal);
+                    actionlib::SimpleClientGoalState moveClientState = moveClient.getState();
+                    while(ros::ok() && moveClientState.state_ != actionlib::SimpleClientGoalState::SUCCEEDED && !as_.isPreemptRequested()){
+                        ros::spinOnce();
+                        ros::Duration(0.1).sleep();
+                    }
                 }else{
                     //continuously get new frontier
                     moveClient.sendGoal(moveClientGoal);
@@ -197,11 +202,13 @@ private:
                 
             }
 
-            if(as_.isPreemptRequested()){
+        }
+
+        if(as_.isPreemptRequested()){
                 as_.setAborted();
+                moveClient.cancelAllGoals();
                 return;
             }
-        }
 
     }
 
