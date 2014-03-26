@@ -116,8 +116,8 @@ private:
 
             //check if robot is not within exploration boundary, return to center
             if(!pointInPolygon(eval_pose.pose.position,goal->explore_boundary.polygon)){
-                ROS_INFO("Robot not in exploration boundary, traveling to center");
-
+                ROS_DEBUG("Robot not in exploration boundary, traveling to center");
+                if(success_) ROS_WARN("Robot left exploration boundary, returning to center");
                 //get current robot position in frame of exploration center
                 geometry_msgs::PointStamped eval_point;
                 eval_point.header = eval_pose.header;
@@ -133,13 +133,13 @@ private:
 
             }else if(getNextFrontier.call(srv)){ //if in boundary, try to find next frontier
 
-                ROS_INFO("Found frontier to explore");
+                ROS_DEBUG("Found frontier to explore");
                 success_ = true;
                 goal_pose = feedback_.next_frontier = srv.response.next_frontier;
                 retry_ = 5;
 
             }else{ //if no boundary found, check if should retry
-                ROS_INFO("Couldn't find a frontier");
+                ROS_DEBUG("Couldn't find a frontier");
 
                 //check if should retry
                 if(retry_ == 0 && success_){
@@ -154,15 +154,15 @@ private:
                     return;
                 }
 
-                ROS_INFO("Retrying...");
+                ROS_DEBUG("Retrying...");
                 retry_--;
-                //don't move robot, skip to next iteration of loop
+                //try to find frontier again, without moving robot
                 continue;
             }
 
-            //check if move_base goal needs to be resent (points are far away from each other)
+            //check if new goal is close to old goal, hence no need to resend
             if(!pointsAdjacent(move_client_goal_.target_pose.pose.position,goal_pose.pose.position,0.1)){
-                ROS_WARN("New exploration goal");
+                ROS_DEBUG("New exploration goal");
                 move_client_goal_.target_pose = goal_pose;
                 boost::unique_lock<boost::mutex> lock(move_client_lock_);
                 if(as_.isActive()){
@@ -193,6 +193,7 @@ private:
 
         boost::unique_lock<boost::mutex> lock(move_client_lock_);
         move_client_.cancelGoalsAtAndBeforeTime(ros::Time::now());
+        ROS_WARN("Current exploration task cancelled");
 
         if(as_.isActive()){
             as_.setPreempted();
@@ -215,20 +216,6 @@ private:
         }
 
     }
-
-    //    /**
-    //     * @brief checks if point lies inside area bounded by polygon
-    //     */
-    //    bool pointInPolygon(geometry_msgs::Point point, geometry_msgs::Polygon polygon){
-    //        int cross = 0;
-    //        for (int i = 0, j = polygon.points.size()-1; i < polygon.points.size(); j = i++) {
-    //            if ( ((polygon.points[i].y > point.y) != (polygon.points[j].y>point.y)) &&
-    //                 (point.x < (polygon.points[j].x-polygon.points[i].x) * (point.y-polygon.points[i].y) / (polygon.points[j].y-polygon.points[i].y) + polygon.points[i].x) ){
-    //                cross++;
-    //            }
-    //        }
-    //        return bool(cross % 2);
-    //    }
 
 };
 
