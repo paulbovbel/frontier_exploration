@@ -4,12 +4,14 @@ project(frontier_exploration)
 find_package(catkin REQUIRED COMPONENTS
   costmap_2d
   dynamic_reconfigure
+  move_base_msgs
   geometry_msgs
   roscpp
   std_msgs
   tf
   actionlib
   actionlib_msgs
+  visualization_msgs
   message_generation
 )
 
@@ -34,7 +36,7 @@ add_action_files(
 
 generate_messages(
   DEPENDENCIES
-  geometry_msgs   std_msgs  actionlib_msgs
+  geometry_msgs std_msgs  actionlib_msgs move_base_msgs visualization_msgs
 )
 
 catkin_package(
