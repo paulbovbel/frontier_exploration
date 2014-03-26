@@ -27,6 +27,7 @@ public:
         explore_costmap_ros_(0),
         as_(nh_, name, boost::bind(&ExampleExplorationServer::executeCB, this, _1), false)
     {
+        private_nh_.param<double>("frequency", frequency_, 1.0);
         as_.start();
     }
 
@@ -42,6 +43,7 @@ private:
     actionlib::SimpleActionServer<frontier_exploration::ExploreTaskAction> as_;
 
     costmap_2d::Costmap2DROS* explore_costmap_ros_;
+    double frequency_;
 
     /**
      * @brief Performs frontier exploration action using exploration costmap layer
@@ -128,7 +130,6 @@ private:
             return;
         };
 
-        bool success = false;
         //loop until all frontiers are explored (can't find any more)
         while(ros::ok() && !as_.isPreemptRequested()){
 
@@ -160,6 +161,7 @@ private:
 
                 if(getNextFrontier.call(srv)){
                     ROS_INFO("Found frontier to explore");
+                    success = true;
                     goal_pose = srv.response.next_frontier;
                     break;
                 }else{
@@ -178,28 +180,21 @@ private:
 
             }
 
-            //move halfway to next frontier
-            retry = 5;
-            while(ros::ok() && !as_.isPreemptRequested()){
+            //move to next frontier            
+            if(ros::ok() && !as_.isPreemptRequested()){
                 ROS_INFO("Moving to exploration goal");
                 move_base_msgs::MoveBaseGoal moveClientGoal;
                 moveClientGoal.target_pose = goal_pose;
-                moveClient.sendGoalAndWait(moveClientGoal);
-                actionlib::SimpleClientGoalState moveClientState = moveClient.getState();
-                if(moveClientState.state_ == actionlib::SimpleClientGoalState::SUCCEEDED){
-
-                    success = true;
-                    break;
+            
+                if(frequency_ <= 0){
+                    //only get new goal when reached previously found frontier
+                    moveClient.sendGoalAndWait(moveClientGoal);                
                 }else{
-
-                    retry--;
-                    if(retry == 0 || !ros::ok()){
-                        as_.setAborted();
-                        return;
-                    }
-                    ROS_WARN("retrying...");
-                    ros::Duration(0.5).sleep();
+                    //continuously get new frontier
+                    moveClient.sendGoal(moveClientGoal);
+                    ros::Rate(frequency_).sleep();
                 }
+                
             }
 
             if(as_.isPreemptRequested()){

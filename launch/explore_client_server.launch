@@ -2,9 +2,13 @@
 
 <launch>
 
-    <node pkg="frontier_exploration" type="explore_client" respawn="false" name="explore_client" output="screen"/>
+    <node pkg="frontier_exploration" type="explore_client" respawn="false" name="explore_client" output="screen">
+        <param name="proximity" type="double" value="0.2"/>
+    </node>
 
     <node pkg="frontier_exploration" type="explore_server" respawn="false" name="explore_server" output="screen">
+
+        <param name="frequency" type="double" value="1.0"/>
 
         <rosparam ns="explore_costmap">
             #Sample parameters
