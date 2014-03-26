@@ -2,6 +2,16 @@
 Changelog for package frontier_exploration
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* fix build dependency
+* eliminate redundant move_base goal updates, fix locking
+* externalize static for geometric calculations
+* refactor action server with callbacks
+* fix pre-emption with continuous goal updating
+* implement continuous frontier/goal updating
+* Contributors: Paul Bovbel
+
 0.1.0 (2014-03-25)
 ------------------
 * added install target for client
