@@ -38,7 +38,7 @@
                 - {name: inflation,               type: "costmap_2d::InflationLayer"}
 
             static:
-                #Can pull data from static map or another non-rolling costmap, make sure global_frame is the same
+                #Can pull data from gmapping, map_server or a non-rolling costmap, make sure global_frame is the same
                 
                 map_topic: /map
                 #map_topic: move_base/global_costmap/costmap   
@@ -59,6 +59,5 @@
                 inflation_radius: 0.15
       </rosparam>
     </node>
-
 
 </launch>
