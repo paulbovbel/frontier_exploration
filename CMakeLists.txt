@@ -54,9 +54,9 @@ catkin_package(
 
 include_directories(include ${catkin_INCLUDE_DIRS} ${Boost_INCLUDE_DIRS} ${PCL_INCLUDE_DIRS})
 
-add_library(bounded_explore_layer plugins/bounded_explore_layer.cpp)
-target_link_libraries(bounded_explore_layer ${catkin_LIBRARIES} ${PCL_LIBRARIES} ${Boost_LIBRARIES})
-add_dependencies(bounded_explore_layer ${PROJECT_NAME}_generate_messages_cpp ${catkin_EXPORTED_TARGETS})
+add_library(explore_costmap plugins/bounded_explore_layer.cpp)
+target_link_libraries(explore_costmap ${catkin_LIBRARIES} ${PCL_LIBRARIES} ${Boost_LIBRARIES})
+add_dependencies(explore_costmap ${PROJECT_NAME}_generate_messages_cpp ${catkin_EXPORTED_TARGETS})
 
 add_executable(explore_server src/explore_server.cpp)
 target_link_libraries(explore_server ${catkin_LIBRARIES})
