@@ -10,7 +10,7 @@
 
     <node pkg="frontier_exploration" type="explore_server" respawn="false" name="explore_server" output="screen" >
 
-        <param name="frequency" type="double" value="0.0"/>
+        <param name="frequency" type="double" value="0.5"/>
 
         <rosparam ns="explore_costmap">
             #Sample parameters

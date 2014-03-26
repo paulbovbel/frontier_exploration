@@ -55,6 +55,7 @@ private:
     boost::mutex move_client_lock_;
     frontier_exploration::ExploreTaskFeedback feedback_;
     actionlib::SimpleActionClient<move_base_msgs::MoveBaseAction> move_client_;
+    move_base_msgs::MoveBaseGoal move_client_goal_;
 
     /**
      * @brief Performs frontier exploration action using exploration costmap layer
@@ -83,12 +84,6 @@ private:
             return;
         }
 
-        //create pose for exploration center
-        geometry_msgs::PoseStamped center_pose;
-        center_pose.header = goal->explore_center.header;
-        center_pose.pose.position = goal->explore_center.point;
-        center_pose.pose.orientation = tf::createQuaternionMsgFromYaw(0);
-
         //set region boundary on costmap
         if(ros::ok() && as_.isActive()){
             frontier_exploration::UpdateBoundaryPolygon srv;
@@ -109,7 +104,7 @@ private:
             frontier_exploration::GetNextFrontier srv;
             tf::Stamped<tf::Pose> robot_pose;
 
-            //get current robot pose in global frame
+            //get current robot pose in frame of exploration boundary
             explore_costmap_ros_->getRobotPose(robot_pose);
             tf::poseStampedTFToMsg(robot_pose,srv.request.start_pose);
 
@@ -121,24 +116,37 @@ private:
 
             //check if robot is not within exploration boundary, return to center
             if(!pointInPolygon(eval_pose.pose.position,goal->explore_boundary.polygon)){
-                ROS_WARN("Robot left exploration boundary, returning to center...");
-                goal_pose = center_pose;
+                ROS_INFO("Robot not in exploration boundary, traveling to center");
 
-                //if in boundary, try to find next frontier
-            }else if(getNextFrontier.call(srv)){
+                //get current robot position in frame of exploration center
+                geometry_msgs::PointStamped eval_point;
+                eval_point.header = eval_pose.header;
+                eval_point.point = eval_pose.pose.position;
+                if(eval_point.header.frame_id != goal->explore_center.header.frame_id){
+                    tf_listener_.transformPoint(goal->explore_center.header.frame_id, goal->explore_center, eval_point);
+                }
+
+                //set goal pose to exploration center
+                goal_pose.header = goal->explore_center.header;
+                goal_pose.pose.position = goal->explore_center.point;
+                goal_pose.pose.orientation = tf::createQuaternionMsgFromYaw( yawBetweenTwoPoints(eval_pose.pose.position, goal->explore_center.point) );
+
+            }else if(getNextFrontier.call(srv)){ //if in boundary, try to find next frontier
+
                 ROS_INFO("Found frontier to explore");
                 success_ = true;
                 goal_pose = feedback_.next_frontier = srv.response.next_frontier;
                 retry_ = 5;
 
-                //if no boundary found, check if should retry
-            }else{
+            }else{ //if no boundary found, check if should retry
                 ROS_INFO("Couldn't find a frontier");
 
                 //check if should retry
                 if(retry_ == 0 && success_){
                     ROS_WARN("Finished exploring room");
                     as_.setSucceeded();
+                    boost::unique_lock<boost::mutex> lock(move_client_lock_);
+                    move_client_.cancelGoalsAtAndBeforeTime(ros::Time::now());
                     return;
                 }else if(retry_ == 0 || !ros::ok()){
                     ROS_ERROR("Failed exploration");
@@ -152,14 +160,16 @@ private:
                 continue;
             }
 
-            move_base_msgs::MoveBaseGoal move_client_goal;
-            move_client_goal.target_pose = goal_pose;
-
-            boost::unique_lock<boost::mutex> lock(move_client_lock_);
-            if(as_.isActive()){
-                move_client_.sendGoal(move_client_goal, boost::bind(&FrontierExplorationServer::doneMovingCb, this, _1, _2),0,boost::bind(&FrontierExplorationServer::feedbackMovingCb, this, _1));
+            //check if move_base goal needs to be resent (points are far away from each other)
+            if(!pointsAdjacent(move_client_goal_.target_pose.pose.position,goal_pose.pose.position,0.1)){
+                ROS_WARN("New exploration goal");
+                move_client_goal_.target_pose = goal_pose;
+                boost::unique_lock<boost::mutex> lock(move_client_lock_);
+                if(as_.isActive()){
+                    move_client_.sendGoal(move_client_goal_, boost::bind(&FrontierExplorationServer::doneMovingCb, this, _1, _2),0,boost::bind(&FrontierExplorationServer::feedbackMovingCb, this, _1));
+                }
+                lock.unlock();
             }
-            lock.unlock();
 
             //check if continuous goal updating is enabled
             if(frequency_ <= 0.0){
@@ -178,9 +188,10 @@ private:
 
     }
 
+
     void preemptCb(){
 
-        boost::lock_guard<boost::mutex> lock(move_client_lock_);
+        boost::unique_lock<boost::mutex> lock(move_client_lock_);
         move_client_.cancelGoalsAtAndBeforeTime(ros::Time::now());
 
         if(as_.isActive()){
@@ -205,19 +216,19 @@ private:
 
     }
 
-//    /**
-//     * @brief checks if point lies inside area bounded by polygon
-//     */
-//    bool pointInPolygon(geometry_msgs::Point point, geometry_msgs::Polygon polygon){
-//        int cross = 0;
-//        for (int i = 0, j = polygon.points.size()-1; i < polygon.points.size(); j = i++) {
-//            if ( ((polygon.points[i].y > point.y) != (polygon.points[j].y>point.y)) &&
-//                 (point.x < (polygon.points[j].x-polygon.points[i].x) * (point.y-polygon.points[i].y) / (polygon.points[j].y-polygon.points[i].y) + polygon.points[i].x) ){
-//                cross++;
-//            }
-//        }
-//        return bool(cross % 2);
-//    }
+    //    /**
+    //     * @brief checks if point lies inside area bounded by polygon
+    //     */
+    //    bool pointInPolygon(geometry_msgs::Point point, geometry_msgs::Polygon polygon){
+    //        int cross = 0;
+    //        for (int i = 0, j = polygon.points.size()-1; i < polygon.points.size(); j = i++) {
+    //            if ( ((polygon.points[i].y > point.y) != (polygon.points[j].y>point.y)) &&
+    //                 (point.x < (polygon.points[j].x-polygon.points[i].x) * (point.y-polygon.points[i].y) / (polygon.points[j].y-polygon.points[i].y) + polygon.points[i].x) ){
+    //                cross++;
+    //            }
+    //        }
+    //        return bool(cross % 2);
+    //    }
 
 };
 

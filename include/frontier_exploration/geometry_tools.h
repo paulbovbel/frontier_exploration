@@ -19,4 +19,19 @@ static bool pointInPolygon(geometry_msgs::Point point, geometry_msgs::Polygon po
     return bool(cross % 2);
 }
 
+static double yawBetweenTwoPoints(geometry_msgs::Point start, geometry_msgs::Point end){
+
+    double delta_x, delta_y;
+    delta_x = end.x - start.x;
+    delta_y = end.y - start.y;
+
+    double yaw = atan(delta_x/delta_y);
+
+    if(delta_x < 0){
+        yaw = M_PI-yaw;
+    }
+
+    return yaw;
+}
+
 }

@@ -18,6 +18,7 @@
 #include <pcl/point_cloud.h>
 #include <pcl/point_types.h>
 
+#include <frontier_exploration/geometry_tools.h>
 
 PLUGINLIB_EXPORT_CLASS(frontier_exploration::BoundedExploreLayer, costmap_2d::Layer)
 
@@ -145,21 +146,7 @@ namespace frontier_exploration
             ROS_WARN("Falling back to closest frontier selection");
             next_frontier.pose.position = selected.initial;
         }
-
-
-        next_frontier.pose.position.z = 0;
-
-        //set set goal pose yaw tangent to path between two points
-        double delta_x, delta_y;
-        delta_x = next_frontier.pose.position.x - start_pose.pose.position.x;
-        delta_y = next_frontier.pose.position.y - start_pose.pose.position.y;
-        double yaw = atan(delta_x/delta_y);
-
-        if(delta_x < 0){
-            M_PI-yaw;
-        }
-
-        next_frontier.pose.orientation = tf::createQuaternionMsgFromYaw(yaw);
+        next_frontier.pose.orientation = tf::createQuaternionMsgFromYaw( yawBetweenTwoPoints(start_pose.pose.position, next_frontier.pose.position) );
         return true;
 
     }
