@@ -13,7 +13,7 @@ find_package(catkin REQUIRED COMPONENTS
   message_generation
 )
 
-find_package(Boost REQUIRED COMPONENTS system)
+find_package(Boost REQUIRED COMPONENTS foreach system)
 find_package(PCL REQUIRED)
 
 add_message_files(
