@@ -9,7 +9,8 @@ The exploration costmap requires a sensor to clear away explored space and mark 
 
 See the provided launch file for a sample configuration!
 
-[![Demo Video](http://img.youtube.com/vi/U3GgVnNqkUU/0.jpg)](http://www.youtube.com/watch?v=U3GgVnNqkUU)
+[![Demo Video](http://i.imgur.com/Y5BlYgS.png?)](http://www.youtube.com/watch?v=U3GgVnNqkUU)
+[![Demo Video](http://i.imgur.com/7LuruQm.png?)](http://www.youtube.com/watch?v=U3GgVnNqkUU)
 
 TODO:
 
