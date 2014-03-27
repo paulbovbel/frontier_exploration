@@ -2,6 +2,11 @@
 Changelog for package frontier_exploration
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* revert redundant dependency
+* Contributors: Paul Bovbel
+
 0.1.2 (2014-03-27)
 ------------------
 * fix message dependencies
