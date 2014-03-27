@@ -124,13 +124,14 @@ private:
                 eval_point.header = eval_pose.header;
                 eval_point.point = eval_pose.pose.position;
                 if(eval_point.header.frame_id != goal->explore_center.header.frame_id){
-                    tf_listener_.transformPoint(goal->explore_center.header.frame_id, goal->explore_center, eval_point);
+                    geometry_msgs::PointStamped temp = eval_point;
+                    tf_listener_.transformPoint(goal->explore_center.header.frame_id, temp, eval_point);
                 }
 
                 //set goal pose to exploration center
                 goal_pose.header = goal->explore_center.header;
                 goal_pose.pose.position = goal->explore_center.point;
-                goal_pose.pose.orientation = tf::createQuaternionMsgFromYaw( yawBetweenTwoPoints(eval_pose.pose.position, goal->explore_center.point) );
+                goal_pose.pose.orientation = tf::createQuaternionMsgFromYaw( yawBetweenTwoPoints(eval_point.point, goal->explore_center.point) );
 
             }else if(getNextFrontier.call(srv)){ //if in boundary, try to find next frontier
 
@@ -185,7 +186,7 @@ private:
         }
 
         //goal should never be active at this point
-        assert(!as_.isActive());
+        ROS_ASSERT(!as_.isActive());
 
     }
 
