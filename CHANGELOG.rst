@@ -2,8 +2,8 @@
 Changelog for package frontier_exploration
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+0.1.3 (2014-03-27)
+------------------
 * revert redundant dependency
 * Contributors: Paul Bovbel
 
