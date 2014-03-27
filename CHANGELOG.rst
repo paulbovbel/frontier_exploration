@@ -2,6 +2,11 @@
 Changelog for package frontier_exploration
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* fix properly transforming robot position into goal frame
+* Contributors: Paul Bovbel
+
 0.1.3 (2014-03-27)
 ------------------
 * revert redundant dependency
