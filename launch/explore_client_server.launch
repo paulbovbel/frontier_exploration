@@ -19,7 +19,7 @@
 
         <rosparam ns="explore_costmap" subst_value="true">
             #Sample parameters
-            footprint: [[0.5, 0.0], [0.0, 0.5], [0.0, -0.5], [-0.5, 0.0]]
+            footprint: [[0.1, 0.0], [0.0, 0.1], [0.0, -0.1], [-0.1, 0.0]]
             robot_radius: 0.10
             
             transform_tolerance: 2.0
@@ -27,7 +27,7 @@
             publish_frequency: 1.0
 
             global_frame: map
-            robot_base_frame: casper_base_link
+            robot_base_frame: base_link
             resolution: 0.05
 
             #Must be rolling and track unknown space to work with BoundedExploreLayer
@@ -37,7 +37,7 @@
             plugins: 
 
                 #Static map optional, but should be first if present
-                #- {name: static,                  type: "costmap_2d::StaticLayer"}            
+                - {name: static,                  type: "costmap_2d::StaticLayer"}            
                 - {name: explore_boundary,        type: "frontier_exploration::BoundedExploreLayer"}
                 #Must have some sort of sensor to clear out obstacles
                 - {name: explore_sensor,          type: "costmap_2d::ObstacleLayer"}
@@ -47,13 +47,13 @@
             static:
                 #Can pull data from gmapping, map_server or a non-rolling costmap, make sure global_frame is the same
                 
-                #map_topic: /map
-                map_topic: move_base/global_costmap/costmap   
+                map_topic: /map
+                #map_topic: move_base/global_costmap/costmap   
                 subscribe_to_updates: true
 
             explore_boundary:
                 #if using static map, disable boundary resizing
-                resize_to_boundary: true
+                resize_to_boundary: false
                 #frontier point to travel to, valid - 'closest', 'middle', or 'centroid'
                 frontier_travel_point: closest
 
