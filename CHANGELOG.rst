@@ -2,6 +2,11 @@
 Changelog for package frontier_exploration
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* update doc
+* Contributors: Paul Bovbel
+
 0.1.4 (2014-03-27)
 ------------------
 * fix properly transforming robot position into goal frame
