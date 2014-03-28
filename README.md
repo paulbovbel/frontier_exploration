@@ -9,10 +9,11 @@ The exploration costmap requires a sensor to clear away explored space and mark 
 
 See the provided launch file for a sample configuration!
 
+Wiki: http://wiki.ros.org/frontier_exploration
+
+API Doc: http://docs.ros.org/hydro/api/frontier_exploration/html/annotated.html
+
+Demo Video:
+
 [![Demo Video](http://i.imgur.com/Y5BlYgS.png?)](http://www.youtube.com/watch?v=U3GgVnNqkUU)
 [![Demo Video](http://i.imgur.com/7LuruQm.png?)](http://www.youtube.com/watch?v=U3GgVnNqkUU)
-
-TODO:
-
- * Implement method to pause exploration task, likely using a dummy 'pause' action.
- * Add proper test methods.
