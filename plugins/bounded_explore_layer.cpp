@@ -146,7 +146,8 @@ namespace frontier_exploration
             ROS_WARN("Falling back to closest frontier selection");
             next_frontier.pose.position = selected.initial;
         }
-        next_frontier.pose.orientation = tf::createQuaternionMsgFromYaw( yawBetweenTwoPoints(start_pose.pose.position, next_frontier.pose.position) );
+
+        next_frontier.pose.orientation = tf::createQuaternionMsgFromYaw( yawOfVector(start_pose.pose.position, next_frontier.pose.position) );
         return true;
 
     }

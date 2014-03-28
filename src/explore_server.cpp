@@ -139,7 +139,7 @@ private:
                 //set goal pose to exploration center
                 goal_pose.header = goal->explore_center.header;
                 goal_pose.pose.position = goal->explore_center.point;
-                goal_pose.pose.orientation = tf::createQuaternionMsgFromYaw( yawBetweenTwoPoints(eval_point.point, goal->explore_center.point) );
+                goal_pose.pose.orientation = tf::createQuaternionMsgFromYaw( yawOfVector(eval_point.point, goal->explore_center.point) );
 
             }else if(getNextFrontier.call(srv)){ //if in boundary, try to find next frontier
 

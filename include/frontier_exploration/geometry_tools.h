@@ -3,12 +3,25 @@
 
 namespace frontier_exploration{
 
-static bool pointsAdjacent(geometry_msgs::Point one, geometry_msgs::Point two, double proximity){
+/**
+ * @brief Evaluate whether two points are approximately adjacent, within a specified proximity distance.
+ * @param one Point one
+ * @param two Point two
+ * @param proximity Proximity distance
+ * @return True if approximately adjacent, false otherwise
+ */
+bool pointsAdjacent(geometry_msgs::Point one, geometry_msgs::Point two, double proximity){
     double distance = sqrt(pow(one.x-two.x,2.0) + pow(one.y-two.y,2.0));
     return distance < proximity;
 }
 
-static bool pointInPolygon(geometry_msgs::Point point, geometry_msgs::Polygon polygon){
+/**
+ * @brief Evaluate if point is inside area defined by polygon.
+ * @param point Point to test
+ * @param polygon Polygon to test
+ * @return True if point is inside polygon, false otherwise
+ */
+bool pointInPolygon(geometry_msgs::Point point, geometry_msgs::Polygon polygon){
     int cross = 0;
     for (int i = 0, j = polygon.points.size()-1; i < polygon.points.size(); j = i++) {
         if ( ((polygon.points[i].y > point.y) != (polygon.points[j].y>point.y)) &&
@@ -19,11 +32,17 @@ static bool pointInPolygon(geometry_msgs::Point point, geometry_msgs::Polygon po
     return bool(cross % 2);
 }
 
-static double yawBetweenTwoPoints(geometry_msgs::Point start, geometry_msgs::Point end){
+/**
+ * @brief Calculate the yaw of vector defined by origin and end points
+ * @param origin Origin point
+ * @param end End point
+ * @return Yaw angle of vector
+ */
+double yawOfVector(geometry_msgs::Point origin, geometry_msgs::Point end){
 
     double delta_x, delta_y;
-    delta_x = end.x - start.x;
-    delta_y = end.y - start.y;
+    delta_x = end.x - origin.x;
+    delta_y = end.y - origin.y;
 
     double yaw = atan(delta_x/delta_y);
 
