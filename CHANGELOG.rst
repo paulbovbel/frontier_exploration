@@ -2,8 +2,8 @@
 Changelog for package frontier_exploration
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-0.1.5 (2014-03-28)
-------------------
+Forthcoming
+-----------
 * update doc
 * Contributors: Paul Bovbel
 
