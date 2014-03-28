@@ -94,12 +94,8 @@ private:
     bool resize_to_boundary_;
 
     /**
-     * @brief Initialize costmap with exploration data, overwriting all but lethal obstacles from other layers
+     * @brief Update the map with exploration boundary data
      * @param master_grid Reference to master costmap
-     * @param min_i
-     * @param min_j
-     * @param max_i
-     * @param max_j
      */
     void mapUpdateKeepObstacles(costmap_2d::Costmap2D& master_grid, int min_i, int min_j, int max_i, int max_j);
 
