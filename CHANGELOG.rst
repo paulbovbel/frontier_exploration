@@ -2,6 +2,11 @@
 Changelog for package frontier_exploration
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* document helper functions
+* Contributors: Paul Bovbel
+
 0.1.6 (2014-03-28)
 ------------------
 * update doc
