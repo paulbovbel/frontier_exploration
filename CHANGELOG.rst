@@ -2,8 +2,8 @@
 Changelog for package frontier_exploration
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+0.1.8 (2014-03-28)
+------------------
 * revert launch file to general form
 * document helper functions
 * Contributors: Paul Bovbel
