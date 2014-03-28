@@ -22,8 +22,12 @@
 #include <visualization_msgs/Marker.h>
 #include <boost/foreach.hpp>
 
+
 namespace frontier_exploration{
 
+/**
+ * @brief Client for FrontierExplorationServer that receives control points from rviz, and creates boundary polygon for frontier exploration
+ */
 class FrontierExplorationClient{
 
 private:
@@ -40,22 +44,10 @@ private:
 
     bool waiting_for_center_;
 
-public:
-
-    FrontierExplorationClient() :
-        nh_(),
-        private_nh_("~"),
-        waiting_for_center_(false)
-    {
-
-        input_.header.frame_id = "map";
-        private_nh_.param<double>("proximity", proximity_, 0.2);
-        point_ = nh_.subscribe("/clicked_point",10,&FrontierExplorationClient::pointCb, this);
-        point_viz_pub_ = nh_.advertise<visualization_msgs::Marker>("exploration_polygon_marker", 10);
-        point_viz_timer_ = nh_.createWallTimer(ros::WallDuration(0.1), boost::bind(&FrontierExplorationClient::pointVizCb, this));
-    }
-
-    void pointVizCb(){
+    /**
+     * @brief Publish markers for visualization of points for boundary polygon.
+     */
+    void vizPubCb(){
 
         visualization_msgs::Marker points, line_strip;
 
@@ -65,7 +57,6 @@ public:
         points.id = 0;
         line_strip.id = 1;
 
-        //points.type = visualization_msgs::Marker::POINTS;
         points.type = visualization_msgs::Marker::SPHERE_LIST;
         line_strip.type = visualization_msgs::Marker::LINE_STRIP;
 
@@ -101,9 +92,14 @@ public:
 
     }
 
+    /**
+     * @brief Build boundary polygon from points received through rviz gui.
+     * @param point Received point from rviz
+     */
     void pointCb(const geometry_msgs::PointStampedConstPtr& point){
 
         if(waiting_for_center_){
+            //flag is set so this is the last point of boundary polygon, i.e. center
 
             if(!pointInPolygon(point->point,input_.polygon)){
                 ROS_ERROR("Center not inside polygon, restarting");
@@ -120,6 +116,8 @@ public:
             input_.polygon.points.clear();
 
         }else if(input_.polygon.points.empty()){
+            //first control point, so initialize header of boundary polygon
+
             input_.header = point->header;
             input_.polygon.points.push_back(costmap_2d::toPoint32(point->point));
 
@@ -128,6 +126,8 @@ public:
             input_.polygon.points.clear();
 
         }else if(input_.polygon.points.size() > 1 && pointsAdjacent(costmap_2d::toPoint(input_.polygon.points.front()), point->point, proximity_)){
+            //check if last boundary point, i.e. adjacent to first point
+
             if(input_.polygon.points.size() < 3){
                 ROS_ERROR("Not a valid polygon, restarting");
                 input_.polygon.points.clear();
@@ -137,11 +137,31 @@ public:
             }
 
         }else{
+
+            //otherwise, must be a regular point inside boundary polygon
             input_.polygon.points.push_back(costmap_2d::toPoint32(point->point));
             input_.header.stamp = ros::Time::now();
         }
 
     }
+
+public:
+
+    /**
+     * @brief Constructor for the client.
+     */
+    FrontierExplorationClient() :
+        nh_(),
+        private_nh_("~"),
+        waiting_for_center_(false)
+    {
+
+        input_.header.frame_id = "map";
+        private_nh_.param<double>("proximity", proximity_, 0.2);
+        point_ = nh_.subscribe("/clicked_point",10,&FrontierExplorationClient::pointCb, this);
+        point_viz_pub_ = nh_.advertise<visualization_msgs::Marker>("exploration_polygon_marker", 10);
+        point_viz_timer_ = nh_.createWallTimer(ros::WallDuration(0.1), boost::bind(&FrontierExplorationClient::vizPubCb, this));
+    }    
 
 };
 

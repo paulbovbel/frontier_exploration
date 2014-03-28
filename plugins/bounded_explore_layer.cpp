@@ -151,7 +151,7 @@ namespace frontier_exploration
 
     }
 
-    std::list<Frontier> BoundedExploreLayer::findFrontiers(geometry_msgs::Point position, costmap_2d::Costmap2D* costmap){
+    std::list<frontier_exploration::Frontier> BoundedExploreLayer::findFrontiers(geometry_msgs::Point position, costmap_2d::Costmap2D* costmap){
 
         std::list<Frontier> frontier_list;
 
@@ -212,7 +212,7 @@ namespace frontier_exploration
         return frontier_list;
     }
 
-    Frontier BoundedExploreLayer::buildFrontier(unsigned int initial_cell, unsigned int robot, bool* frontier_flag, const unsigned char* map){
+    frontier_exploration::Frontier BoundedExploreLayer::buildFrontier(unsigned int initial_cell, unsigned int robot, bool* frontier_flag, const unsigned char* map){
 
         //initialize frontier structure
         Frontier output;

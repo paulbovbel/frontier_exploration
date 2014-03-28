@@ -18,11 +18,19 @@
 
 namespace frontier_exploration{
 
+/**
+ * @brief Server for frontier exploration action, runs the state machine associated with a
+ * structured frontier exploration task and manages robot movement through move_base.
+ */
 class FrontierExplorationServer
 {
 
 public:
 
+    /**
+     * @brief Constructor for the server, sets up this node's ActionServer for exploration and ActionClient to move_base for robot movement.
+     * @param name Name for SimpleActionServer
+     */
     FrontierExplorationServer(std::string name) :
         tf_listener_(ros::Duration(10.0)),
         private_nh_("~"),
@@ -59,8 +67,8 @@ private:
     move_base_msgs::MoveBaseGoal move_client_goal_;
 
     /**
-     * @brief Performs frontier exploration action using exploration costmap layer
-     * @param goal contains exploration boundary as polygon, and initial exploration point
+     * @brief Execute callback for actionserver, run after accepting a new goal
+     * @param goal ActionGoal containing boundary of area to explore, and a valid centerpoint for the area.
      */
 
     void executeCb(const frontier_exploration::ExploreTaskGoalConstPtr &goal)
@@ -191,6 +199,9 @@ private:
     }
 
 
+    /**
+     * @brief Preempt callback for the server, cancels the current running goal and all associated movement actions.
+     */
     void preemptCb(){
 
         boost::unique_lock<boost::mutex> lock(move_client_lock_);
@@ -203,6 +214,10 @@ private:
 
     }
 
+    /**
+     * @brief Feedback callback for the move_base client, republishes as feedback for the exploration server
+     * @param feedback Feedback from the move_base client
+     */
     void feedbackMovingCb(const move_base_msgs::MoveBaseFeedbackConstPtr& feedback){
 
         feedback_.base_position = feedback->base_position;
@@ -210,8 +225,14 @@ private:
 
     }
 
+    /**
+     * @brief Done callback for the move_base client, checks for errors and aborts exploration task if necessary
+     * @param state State from the move_base client
+     * @param result Result from the move_base client
+     */
     void doneMovingCb(const actionlib::SimpleClientGoalState& state, const move_base_msgs::MoveBaseResultConstPtr& result){
 
+        //TODO: Some kind of error recovery
         if (state == actionlib::SimpleClientGoalState::ABORTED){
             ROS_ERROR("Failed to move");
             as_.setAborted();
