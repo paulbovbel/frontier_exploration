@@ -1,23 +1,16 @@
 #include <frontier_exploration/bounded_explore_layer.h>
 #include <pluginlib/class_list_macros.h>
-
 #include <geometry_msgs/PolygonStamped.h>
-
 #include <costmap_2d/costmap_2d.h>
-
 #include <frontier_exploration/Frontier.h>
-
 #include <frontier_exploration/UpdateBoundaryPolygon.h>
 #include <frontier_exploration/GetNextFrontier.h>
 #include <boost/foreach.hpp>
 #include <costmap_2d/footprint.h>
-
 #include <sensor_msgs/PointCloud2.h>
-
 #include <pcl_ros/point_cloud.h>
 #include <pcl/point_cloud.h>
 #include <pcl/point_types.h>
-
 #include <frontier_exploration/geometry_tools.h>
 
 PLUGINLIB_EXPORT_CLASS(frontier_exploration::BoundedExploreLayer, costmap_2d::Layer)

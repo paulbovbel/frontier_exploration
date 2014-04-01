@@ -58,7 +58,7 @@ private:
 
     costmap_2d::Costmap2DROS* explore_costmap_ros_;
     double frequency_, goal_aliasing_;
-    bool success_;
+    bool success_, moving_;
     int retry_;
 
     boost::mutex move_client_lock_;
@@ -75,6 +75,7 @@ private:
     {
 
         success_ = false;
+        moving_ = false;
 
         //create exploration costmap
         if(!explore_costmap_ros_){
@@ -171,12 +172,13 @@ private:
             }
 
             //check if new goal is close to old goal, hence no need to resend
-            if(!pointsAdjacent(move_client_goal_.target_pose.pose.position,goal_pose.pose.position,goal_aliasing_*0.9)){
+            if(!moving_ || !pointsAdjacent(move_client_goal_.target_pose.pose.position,goal_pose.pose.position,goal_aliasing_*0.9)){
                 ROS_DEBUG("New exploration goal");
                 move_client_goal_.target_pose = goal_pose;
                 boost::unique_lock<boost::mutex> lock(move_client_lock_);
                 if(as_.isActive()){
                     move_client_.sendGoal(move_client_goal_, boost::bind(&FrontierExplorationServer::doneMovingCb, this, _1, _2),0,boost::bind(&FrontierExplorationServer::feedbackMovingCb, this, _1));
+                    moving_ = true;
                 }
                 lock.unlock();
             }
@@ -236,6 +238,8 @@ private:
         if (state == actionlib::SimpleClientGoalState::ABORTED){
             ROS_ERROR("Failed to move");
             as_.setAborted();
+        }else if(state == actionlib::SimpleClientGoalState::SUCCEEDED){
+            moving_ = false;
         }
 
     }
