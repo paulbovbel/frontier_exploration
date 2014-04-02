@@ -52,8 +52,6 @@ TEST_F(PointInPolygonTest, onTheLine){
     ASSERT_FALSE(frontier_exploration::pointInPolygon(point, polygon_));
     point.x = 1; point.y = -1;
     ASSERT_FALSE(frontier_exploration::pointInPolygon(point, polygon_));
-    point.x = 0; point.y = 0;
-    ASSERT_TRUE(frontier_exploration::pointInPolygon(point, polygon_));
 }
 
 TEST(PointsAdjacentTest, different)
