@@ -68,6 +68,29 @@ add_executable(explore_client src/explore_client.cpp)
 target_link_libraries(explore_client ${catkin_LIBRARIES})
 add_dependencies(explore_client ${PROJECT_NAME}_generate_messages_cpp ${catkin_EXPORTED_TARGETS})
 
+if(CATKIN_ENABLE_TESTING)
+  # Find package test dependencies
+  find_package(rostest REQUIRED)
+  find_package(gtest)
+
+
+  # Add the test folder to the include directories
+  include_directories(src/test)
+
+  include_directories(${GTEST_INCLUDE_DIRS})
+  link_directories(${GTEST_LIBRARY_DIRS})
+
+  catkin_add_gtest(bounded_explore_layer_tests src/test/bounded_explore_layer_tests.cpp)
+  target_link_libraries(bounded_explore_layer_tests explore_costmap)
+
+  catkin_add_gtest(geometry_tools_tests src/test/geometry_tools_tests.cpp)
+  target_link_libraries(geometry_tools_tests explore_costmap)
+
+  catkin_add_gtest(costmap_tools_tests src/test/costmap_tools_tests.cpp)
+  target_link_libraries(costmap_tools_tests explore_costmap)
+
+endif()
+
 install(TARGETS explore_server explore_client
         RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION})
 

@@ -127,15 +127,6 @@ private:
     bool isNewFrontierCell(unsigned int idx, bool* frontier_flag, const unsigned char* map);
 
     /**
-     * @brief Find nearest cell of specified value
-     * @param ret Result of search
-     * @param idx Initial search cell
-     * @param val Desired value
-     * @param map Reference to map data
-     * @return
-     */
-
-    /**
      * @brief Find nearest cell of a specified value
      * @param result Index of located cell
      * @param start Index initial cell to search from
@@ -144,20 +135,6 @@ private:
      * @return True if a cell with the requested value was found
      */
     bool nearestCell(unsigned int &result, unsigned int start, unsigned char val, const unsigned char* map);
-
-    /**
-    * @brief Determine 4-connected neighbourhood of an input cell, checking for map edges
-    * @param idx input cell index
-    * @return neighbour cell indexes
-    */
-    std::vector<unsigned int> nhood4(unsigned int idx);
-
-    /**
-     * @brief Determine 8-connected neighbourhood of an input cell, checking for map edges
-     * @param idx input cell index
-     * @return neighbour cell indexes
-     */
-    std::vector<unsigned int> nhood8(unsigned int idx);
 
     void reconfigureCB(costmap_2d::GenericPluginConfig &config, uint32_t level);
 

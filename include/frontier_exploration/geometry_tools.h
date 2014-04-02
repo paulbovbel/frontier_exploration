@@ -1,5 +1,6 @@
-#include <geometry_msgs/PolygonStamped.h>
-#include <geometry_msgs/PointStamped.h>
+#include <geometry_msgs/Polygon.h>
+#include <geometry_msgs/Point.h>
+#include <costmap_2d/costmap_2d.h>
 
 namespace frontier_exploration{
 
@@ -11,12 +12,12 @@ namespace frontier_exploration{
  * @return True if approximately adjacent, false otherwise
  */
 bool pointsAdjacent(geometry_msgs::Point one, geometry_msgs::Point two, double proximity){
-    double distance = sqrt(pow(one.x-two.x,2.0) + pow(one.y-two.y,2.0));
-    return distance < proximity;
+    double distance = sqrt(pow(one.x-two.x,2.0) + pow(one.y-two.y,2.0) + pow(one.z-two.z,2.0));
+    return distance <= proximity;
 }
 
 /**
- * @brief Evaluate if point is inside area defined by polygon.
+ * @brief Evaluate if point is inside area defined by polygon. Undefined behaviour for points on line.
  * @param point Point to test
  * @param polygon Polygon to test
  * @return True if point is inside polygon, false otherwise

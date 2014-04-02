@@ -11,7 +11,9 @@
 #include <pcl_ros/point_cloud.h>
 #include <pcl/point_cloud.h>
 #include <pcl/point_types.h>
+
 #include <frontier_exploration/geometry_tools.h>
+#include <frontier_exploration/costmap_tools.h>
 
 PLUGINLIB_EXPORT_CLASS(frontier_exploration::BoundedExploreLayer, costmap_2d::Layer)
 
@@ -92,6 +94,8 @@ namespace frontier_exploration
             tf_listener_.transformPose(layered_costmap_->getGlobalFrameID(),temp_pose,start_pose);
         }
 
+
+
         std::list<Frontier> frontier_list = findFrontiers(start_pose.pose.position, layered_costmap_->getCostmap());
 
         if(frontier_list.size() == 0){
@@ -147,17 +151,6 @@ namespace frontier_exploration
 
     std::list<frontier_exploration::Frontier> BoundedExploreLayer::findFrontiers(geometry_msgs::Point position, costmap_2d::Costmap2D* costmap){
 
-        std::list<Frontier> frontier_list;
-
-        int mx,my;
-        worldToMapNoBounds(position.x,position.y,mx,my);
-
-        //Check if robot is outside costmap bounds before searching
-        if (mx < 0 || mx > getSizeInCellsX() || my < 0 || my > getSizeInCellsY()){
-            ROS_ERROR("Robot out of costmap bounds, cannot search for frontiers");
-            return frontier_list;
-        }
-
         //make sure costmap is consistent and locked
         boost::unique_lock < boost::shared_mutex > lock(*(costmap->getLock()));
         unsigned char* map = costmap->getCharMap();
@@ -169,16 +162,26 @@ namespace frontier_exploration
         bool visited_flag[size_x_ * size_y_];
         memset(visited_flag, false, sizeof(bool) * size_x_ * size_y_);
 
+        std::list<Frontier> frontier_list;
+        unsigned int mx,my;
+
+        //Check if robot is outside costmap bounds before searching
+        if (worldToMap(position.x,position.y,mx,my)){
+            ROS_ERROR("Robot out of costmap bounds, cannot search for frontiers");
+            return frontier_list;
+        }
+
+        unsigned int pos = getIndex(mx,my);
+
         //initialize breadth first esearch
         std::queue<unsigned int> bfs;
-        unsigned int robot = getIndex(mx,my);
 
         //find closest clear cell to start search
         unsigned int clear;
-        if(nearestCell(clear, robot, FREE_SPACE, map)){
+        if(nearestCell(clear, pos, FREE_SPACE, map)){
             bfs.push(clear);
         }else{
-            bfs.push(robot);
+            bfs.push(pos);
             ROS_WARN("Could not find nearby clear cell to start search");
         }
         visited_flag[bfs.front()] = true;
@@ -188,7 +191,7 @@ namespace frontier_exploration
             bfs.pop();
 
             //iterate over 4-connected neighbourhood
-            BOOST_FOREACH(unsigned nbr, nhood4(idx)){
+            BOOST_FOREACH(unsigned nbr, nhood4(idx, this)){
                 //add to queue all free, unvisited cells, use descending search in case initialized on non-free cell
                 if(map[nbr] <= map[idx] && !visited_flag[nbr]){
                     visited_flag[nbr] = true;
@@ -196,7 +199,7 @@ namespace frontier_exploration
                     //check if cell is new frontier cell (unvisited, NO_INFORMATION, free neighbour)
                 }else if(isNewFrontierCell(nbr,frontier_flag,map)){
                     frontier_flag[nbr] = true;
-                    Frontier new_frontier = buildFrontier(nbr, robot, frontier_flag,map);
+                    Frontier new_frontier = buildFrontier(nbr, pos, frontier_flag,map);
                     if(new_frontier.size > 1){
                         frontier_list.push_back(new_frontier);
                     }
@@ -235,7 +238,7 @@ namespace frontier_exploration
             bfs.pop();
 
             //try adding cells in 8-connected neighborhood to frontier
-            BOOST_FOREACH(unsigned int nbr, nhood8(idx)){
+            BOOST_FOREACH(unsigned int nbr, nhood8(idx, this)){
                 //check if neighbour is a potential frontier cell
                 if(isNewFrontierCell(nbr,frontier_flag, map)){
 
@@ -281,7 +284,7 @@ namespace frontier_exploration
         }
 
         //frontier cells should have at least one cell in 4-connected neighbourhood that is free
-        BOOST_FOREACH(unsigned int nbr, nhood4(idx)){
+        BOOST_FOREACH(unsigned int nbr, nhood4(idx, this)){
             if(map[nbr] == FREE_SPACE){
                 return true;
             }
@@ -314,7 +317,7 @@ namespace frontier_exploration
             }
 
             //iterate over all adjacent unvisited cells
-            BOOST_FOREACH(unsigned nbr, nhood8(idx)){
+            BOOST_FOREACH(unsigned nbr, nhood8(idx, this)){
                 if(!visited_flag[nbr]){
                     bfs.push(nbr);
                     visited_flag[nbr] = true;
@@ -322,47 +325,6 @@ namespace frontier_exploration
             }
         }
         return false;
-
-    }
-
-    std::vector<unsigned int> BoundedExploreLayer::nhood4(unsigned int idx){
-        //get 4-connected neighbourhood indexes, check for edge of map
-        std::vector<unsigned int> out;
-
-        if(idx % size_x_ > 0){
-            out.push_back(idx - 1);
-        }
-        if(idx % size_x_ < size_x_ - 1){
-            out.push_back(idx + 1);
-        }
-        if(idx >= size_x_){
-            out.push_back(idx - size_x_);
-        }
-        if(idx < size_x_*(size_y_-1)){
-            out.push_back(idx + size_x_);
-        }
-        return out;
-
-    }
-
-    std::vector<unsigned int> BoundedExploreLayer::nhood8(unsigned int idx){
-        //get 8-connected neighbourhood indexes, check for edge of map
-        std::vector<unsigned int> out = nhood4(idx);
-
-        if(idx % size_x_ > 0 && idx >= size_x_){
-            out.push_back(idx - 1 - size_x_);
-        }
-        if(idx % size_x_ > 0 && idx < size_x_*(size_y_-1)){
-            out.push_back(idx - 1 + size_x_);
-        }
-        if(idx % size_x_ < size_x_ - 1 && idx >= size_x_){
-            out.push_back(idx + 1 - size_x_);
-        }
-        if(idx % size_x_ < size_x_ - 1 && idx < size_x_*(size_y_-1)){
-            out.push_back(idx + 1 + size_x_);
-        }
-
-        return out;
 
     }
 
