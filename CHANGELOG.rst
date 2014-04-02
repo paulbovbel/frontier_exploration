@@ -2,8 +2,8 @@
 Changelog for package frontier_exploration
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+0.1.9 (2014-04-02)
+------------------
 * fix regression
 * refactor for testing
 * fix stuck movement with 0 frequency
