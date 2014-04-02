@@ -166,7 +166,7 @@ namespace frontier_exploration
         unsigned int mx,my;
 
         //Check if robot is outside costmap bounds before searching
-        if (worldToMap(position.x,position.y,mx,my)){
+        if (!worldToMap(position.x,position.y,mx,my)){
             ROS_ERROR("Robot out of costmap bounds, cannot search for frontiers");
             return frontier_list;
         }

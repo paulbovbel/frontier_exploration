@@ -172,7 +172,7 @@ private:
             }
 
             //check if new goal is close to old goal, hence no need to resend
-            if(!moving_ || !pointsAdjacent(move_client_goal_.target_pose.pose.position,goal_pose.pose.position,goal_aliasing_*0.9)){
+            if(!moving_ || !pointsAdjacent(move_client_goal_.target_pose.pose.position,goal_pose.pose.position,goal_aliasing_*0.5)){
                 ROS_DEBUG("New exploration goal");
                 move_client_goal_.target_pose = goal_pose;
                 boost::unique_lock<boost::mutex> lock(move_client_lock_);
@@ -186,7 +186,7 @@ private:
             //check if continuous goal updating is enabled
             if(frequency_ <= 0.0){
                 //wait for movement to finish before continuing
-                while(ros::ok() && as_.isActive() && !move_client_.waitForResult(ros::Duration(0,0))){
+                while(ros::ok() && as_.isActive() && moving_){
                     ros::WallDuration(0,1000000).sleep();
                 }
             }else{
