@@ -41,7 +41,15 @@ namespace frontier_exploration
         frontier_cloud_pub = nh_.advertise<sensor_msgs::PointCloud2>("frontiers",5);
         configured_ = false;
         marked_ = false;
-        default_value_ = NO_INFORMATION;
+
+        bool track_unknown_space;
+        nh_.param("track_unknown_space", track_unknown_space, layered_costmap_->isTrackingUnknown());
+        if(track_unknown_space){
+          default_value_ = NO_INFORMATION;
+        }else{
+          default_value_ = FREE_SPACE;
+        }
+
         matchSize();
 
         nh_.param<bool>("resize_to_boundary", resize_to_boundary_, false);
@@ -167,9 +175,6 @@ namespace frontier_exploration
         unsigned char* map = costmap->getCharMap();
 
         //initialize flag arrays to keep track of visited and frontier cells
-//        bool frontier_flag[size_x_ * size_y_];
-//        bool visited_flag[size_x_ * size_y_];
-
         bool *frontier_flag = new bool[size_x_ * size_y_];
         bool *visited_flag = new bool[size_x_ * size_y_];
 
