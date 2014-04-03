@@ -151,17 +151,6 @@ namespace frontier_exploration
 
     std::list<frontier_exploration::Frontier> BoundedExploreLayer::findFrontiers(geometry_msgs::Point position, costmap_2d::Costmap2D* costmap){
 
-        //make sure costmap is consistent and locked
-        boost::unique_lock < boost::shared_mutex > lock(*(costmap->getLock()));
-        unsigned char* map = costmap->getCharMap();
-
-        //initialize flag arrays to keep track of visited and frontier cells
-        bool frontier_flag[size_x_ * size_y_];
-        memset(frontier_flag, false, sizeof(bool) * size_x_ * size_y_);
-
-        bool visited_flag[size_x_ * size_y_];
-        memset(visited_flag, false, sizeof(bool) * size_x_ * size_y_);
-
         std::list<Frontier> frontier_list;
         unsigned int mx,my;
 
@@ -172,6 +161,20 @@ namespace frontier_exploration
         }
 
         unsigned int pos = getIndex(mx,my);
+
+        //make sure costmap is consistent and locked
+        boost::unique_lock < boost::shared_mutex > lock(*(costmap->getLock()));
+        unsigned char* map = costmap->getCharMap();
+
+        //initialize flag arrays to keep track of visited and frontier cells
+//        bool frontier_flag[size_x_ * size_y_];
+//        bool visited_flag[size_x_ * size_y_];
+
+        bool *frontier_flag = new bool[size_x_ * size_y_];
+        bool *visited_flag = new bool[size_x_ * size_y_];
+
+        memset(frontier_flag, false, sizeof(bool) * size_x_ * size_y_);
+        memset(visited_flag, false, sizeof(bool) * size_x_ * size_y_);
 
         //initialize breadth first esearch
         std::queue<unsigned int> bfs;
@@ -206,6 +209,9 @@ namespace frontier_exploration
                 }
             }
         }
+
+        delete[] frontier_flag;
+        delete[] visited_flag;
         return frontier_list;
     }
 
@@ -298,7 +304,9 @@ namespace frontier_exploration
 
         //initialize breadth first search
         std::queue<unsigned int> bfs;
-        bool visited_flag[size_x_ * size_y_];
+        bool found = false;
+
+        bool *visited_flag = new bool [size_x_ * size_y_];
         memset(visited_flag, false, sizeof(bool) * size_x_ * size_y_);
 
         //push initial cell
@@ -313,7 +321,8 @@ namespace frontier_exploration
             //return if cell of correct value is found
             if(map[idx] == val){
                 result = idx;
-                return true;
+                found = true;
+                break;
             }
 
             //iterate over all adjacent unvisited cells
@@ -324,7 +333,9 @@ namespace frontier_exploration
                 }
             }
         }
-        return false;
+
+        delete[] visited_flag;
+        return found;
 
     }
 
@@ -452,7 +463,7 @@ namespace frontier_exploration
             unsigned int it = span*j+min_i;
             for (int i = min_i; i < max_i; i++)
             {
-                if(master[it] != LETHAL_OBSTACLE){
+                if(master[it] != LETHAL_OBSTACLE && (costmap_[it] == LETHAL_OBSTACLE || costmap_[it] > master[it])){
                     master[it] = costmap_[it];
                 }
                 it++;
