@@ -6,7 +6,7 @@
 
     <node pkg="frontier_exploration" type="explore_server" name="explore_server" output="screen" >
 
-        <param name="frequency" type="double" value="0.5"/>
+        <param name="frequency" type="double" value="2.0"/>
         <param name="goal_aliasing" type="double" value="$(arg sensor_range)"/>
 
         #All standard costmap_2d parameters as in move_base, other than BoundedExploreLayer
@@ -15,9 +15,9 @@
             footprint: [[0.1, 0.0], [0.0, 0.1], [0.0, -0.1], [-0.1, 0.0]]
             robot_radius: 0.10
             
-            transform_tolerance: 2.0
-            update_frequency: 2.0
-            publish_frequency: 1.0
+            transform_tolerance: 0.5
+            update_frequency: 5.0
+            publish_frequency: 5.0
 
             global_frame: map
             robot_base_frame: base_link
