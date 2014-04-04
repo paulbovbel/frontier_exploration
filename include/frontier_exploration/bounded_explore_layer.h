@@ -115,7 +115,7 @@ private:
      * @param map Pointer to costmap data
      * @return Structure containing information about assembled frontier
      */
-    frontier_exploration::Frontier buildFrontier(unsigned int initial_cell, unsigned int robot, bool* frontier_flag, const unsigned char* map);
+    frontier_exploration::Frontier buildFrontier(unsigned int initial_cell, unsigned int robot, std::vector<bool>& frontier_flag, const unsigned char* map);
 
     /**
      * @brief Evaluate if candidate cell is a valid candidate for a new frontier.
@@ -124,7 +124,7 @@ private:
      * @param map Pointer to costmap data
      * @return True if cell is candidate
      */
-    bool isNewFrontierCell(unsigned int idx, bool* frontier_flag, const unsigned char* map);
+    bool isNewFrontierCell(unsigned int idx, const std::vector<bool>& frontier_flag, const unsigned char* map);
 
     /**
      * @brief Find nearest cell of a specified value

@@ -175,13 +175,10 @@ namespace frontier_exploration
         unsigned char* map = costmap->getCharMap();
 
         //initialize flag arrays to keep track of visited and frontier cells
-        bool *frontier_flag = new bool[size_x_ * size_y_];
-        bool *visited_flag = new bool[size_x_ * size_y_];
+        std::vector<bool> frontier_flag(size_x_ * size_y_, false);
+        std::vector<bool> visited_flag(size_x_ * size_y_, false);
 
-        memset(frontier_flag, false, sizeof(bool) * size_x_ * size_y_);
-        memset(visited_flag, false, sizeof(bool) * size_x_ * size_y_);
-
-        //initialize breadth first esearch
+        //initialize breadth first search
         std::queue<unsigned int> bfs;
 
         //find closest clear cell to start search
@@ -215,12 +212,10 @@ namespace frontier_exploration
             }
         }
 
-        delete[] frontier_flag;
-        delete[] visited_flag;
         return frontier_list;
     }
 
-    frontier_exploration::Frontier BoundedExploreLayer::buildFrontier(unsigned int initial_cell, unsigned int robot, bool* frontier_flag, const unsigned char* map){
+    frontier_exploration::Frontier BoundedExploreLayer::buildFrontier(unsigned int initial_cell, unsigned int robot, std::vector<bool>& frontier_flag, const unsigned char* map){
 
         //initialize frontier structure
         Frontier output;
@@ -287,7 +282,7 @@ namespace frontier_exploration
         return output;
     }
 
-    bool BoundedExploreLayer::isNewFrontierCell(unsigned int idx, bool* frontier_flag, const unsigned char* map){
+    bool BoundedExploreLayer::isNewFrontierCell(unsigned int idx, const std::vector<bool>& frontier_flag, const unsigned char* map){
 
         //check that cell is unknown and not already marked as frontier
         if(map[idx] != NO_INFORMATION || frontier_flag[idx]){
@@ -309,10 +304,7 @@ namespace frontier_exploration
 
         //initialize breadth first search
         std::queue<unsigned int> bfs;
-        bool found = false;
-
-        bool *visited_flag = new bool [size_x_ * size_y_];
-        memset(visited_flag, false, sizeof(bool) * size_x_ * size_y_);
+        std::vector<bool> visited_flag(size_x_ * size_y_, false);
 
         //push initial cell
         bfs.push(start);
@@ -326,8 +318,7 @@ namespace frontier_exploration
             //return if cell of correct value is found
             if(map[idx] == val){
                 result = idx;
-                found = true;
-                break;
+                return true;
             }
 
             //iterate over all adjacent unvisited cells
@@ -339,9 +330,7 @@ namespace frontier_exploration
             }
         }
 
-        delete[] visited_flag;
-        return found;
-
+        return false;
     }
 
     bool BoundedExploreLayer::updateBoundaryPolygonService(frontier_exploration::UpdateBoundaryPolygon::Request &req, frontier_exploration::UpdateBoundaryPolygon::Response &res){
