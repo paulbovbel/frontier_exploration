@@ -80,8 +80,8 @@ if(CATKIN_ENABLE_TESTING)
   include_directories(${GTEST_INCLUDE_DIRS})
   link_directories(${GTEST_LIBRARY_DIRS})
 
-  catkin_add_gtest(bounded_explore_layer_tests src/test/bounded_explore_layer_tests.cpp)
-  target_link_libraries(bounded_explore_layer_tests explore_costmap)
+  catkin_add_gtest(frontier_search_tests src/test/frontier_search_tests.cpp)
+  target_link_libraries(frontier_search_tests explore_costmap)
 
   catkin_add_gtest(geometry_tools_tests src/test/geometry_tools_tests.cpp)
   target_link_libraries(geometry_tools_tests explore_costmap)
