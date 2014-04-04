@@ -2,6 +2,16 @@
 Changelog for package frontier_exploration
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* rename test file
+* add more costmap_tools tests
+* refactor with frontier_search strategy object
+* remove calls to parent costmap instance
+* refactored to raii
+* fix gmapping compatibility using new "explore_clear_space" parameter
+* Contributors: Paul Bovbel
+
 0.1.9 (2014-04-02)
 ------------------
 * fix regression
