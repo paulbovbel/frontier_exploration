@@ -56,7 +56,7 @@ catkin_package(
 
 include_directories(include ${catkin_INCLUDE_DIRS} ${Boost_INCLUDE_DIRS} ${PCL_INCLUDE_DIRS})
 
-add_library(explore_costmap plugins/bounded_explore_layer.cpp)
+add_library(explore_costmap plugins/bounded_explore_layer.cpp src/frontier_search.cpp)
 target_link_libraries(explore_costmap ${catkin_LIBRARIES} ${Boost_LIBRARIES} ${PCL_LIBRARIES})
 add_dependencies(explore_costmap ${PROJECT_NAME}_generate_messages_cpp ${catkin_EXPORTED_TARGETS})
 

@@ -1,3 +1,6 @@
+#ifndef GEOMETRY_TOOLS_H_
+#define GEOMETRY_TOOLS_H_
+
 #include <geometry_msgs/Polygon.h>
 #include <geometry_msgs/Point.h>
 #include <costmap_2d/costmap_2d.h>
@@ -55,3 +58,5 @@ double yawOfVector(geometry_msgs::Point origin, geometry_msgs::Point end){
 }
 
 }
+
+#endif

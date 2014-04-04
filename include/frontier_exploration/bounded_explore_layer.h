@@ -1,8 +1,8 @@
 #ifndef BOUNDED_EXPLORE_LAYER_H_
 #define BOUNDED_EXPLORE_LAYER_H_
+
 #include <ros/ros.h>
 #include <costmap_2d/layer.h>
-#include <costmap_2d/layered_costmap.h>
 #include <costmap_2d/GenericPluginConfig.h>
 #include <dynamic_reconfigure/server.h>
 
@@ -29,15 +29,25 @@ public:
      * @brief Loads default values and initialize exploration costmap.
      */
     virtual void onInitialize();
+
+    /**
+     * @brief Calculate bounds of costmap window to update
+     */
     virtual void updateBounds(double origin_x, double origin_y, double origin_yaw, double* polygon_min_x, double* polygon_min_y, double* polygon_max_x,
                               double* polygon_max_y);
 
+    /**
+     * @brief Update requested costmap window
+     */
     virtual void updateCosts(costmap_2d::Costmap2D& master_grid, int min_i, int min_j, int max_i, int max_j);
     bool isDiscretized()
     {
         return true;
     }
 
+    /**
+     * @brief Match dimensions and origin of parent costmap
+     */
     virtual void matchSize();
 
     /**
@@ -80,6 +90,14 @@ protected:
 
 private:
 
+    /**
+     * @brief Update the map with exploration boundary data
+     * @param master_grid Reference to master costmap
+     */
+    void mapUpdateKeepObstacles(costmap_2d::Costmap2D& master_grid, int min_i, int min_j, int max_i, int max_j);
+
+    void reconfigureCB(costmap_2d::GenericPluginConfig &config, uint32_t level);
+
     dynamic_reconfigure::Server<costmap_2d::GenericPluginConfig> *dsrv_;
     ros::ServiceServer polygonService_;
     ros::ServiceServer frontierService_;
@@ -92,51 +110,6 @@ private:
 
     std::string frontier_travel_point_;
     bool resize_to_boundary_;
-
-    /**
-     * @brief Update the map with exploration boundary data
-     * @param master_grid Reference to master costmap
-     */
-    void mapUpdateKeepObstacles(costmap_2d::Costmap2D& master_grid, int min_i, int min_j, int max_i, int max_j);
-
-    /**
-     * @brief Find all frontiers on costmap reachable from specified position.
-     * @param position Initial position
-     * @param costmap Costmap to search
-     * @return List of all frontiers found on costmap, reachable from specified position
-     */
-    std::list<frontier_exploration::Frontier> findFrontiers(geometry_msgs::Point position, const costmap_2d::Costmap2D& costmap);
-
-    /**
-     * @brief Starting from an initial cell, build a frontier from valid adjacent cells
-     * @param initial_cell Index of cell to start frontier building
-     * @param robot Index of robot position, to evaluate frontier distance from robot
-     * @param frontier_flag Flag array indicating which cells are already marked as frontiers
-     * @param map Pointer to costmap data
-     * @return Structure containing information about assembled frontier
-     */
-    frontier_exploration::Frontier buildFrontier(unsigned int initial_cell, unsigned int robot, std::vector<bool>& frontier_flag, const costmap_2d::Costmap2D& costmap);
-
-    /**
-     * @brief Evaluate if candidate cell is a valid candidate for a new frontier.
-     * @param idx Index of candidate cell
-     * @param frontier_flag Flag array indicating which cells are already marked as frontiers
-     * @param map Pointer to costmap data
-     * @return True if cell is candidate
-     */
-    bool isNewFrontierCell(unsigned int idx, const std::vector<bool>& frontier_flag, const costmap_2d::Costmap2D& costmap);
-
-    /**
-     * @brief Find nearest cell of a specified value
-     * @param result Index of located cell
-     * @param start Index initial cell to search from
-     * @param val Specified value to search for
-     * @param map Reference to map data
-     * @return True if a cell with the requested value was found
-     */
-    bool nearestCell(unsigned int &result, unsigned int start, unsigned char val, const costmap_2d::Costmap2D& costmap);
-
-    void reconfigureCB(costmap_2d::GenericPluginConfig &config, uint32_t level);
 
 };
 
