@@ -5,7 +5,8 @@
 
 #include <gtest/gtest.h>
 
-class NeighborhoodFunctionTest : public::testing::Test{
+
+class NeighborhoodFunctionTest : public ::testing::Test{
 protected:
     virtual void SetUp(){
         //create map of 10 x 10
@@ -53,12 +54,53 @@ TEST_F(NeighborhoodFunctionTest, corner)
 
 }
 
-TEST_F(NeighborhoodFunctionTest, offmap)
+TEST_F(NeighborhoodFunctionTest, offMap)
 {
 
     unsigned int idx = costmap_.getIndex(12,12);
     ASSERT_EQ(0,frontier_exploration::nhood4(idx,costmap_).size());
     ASSERT_EQ(0,frontier_exploration::nhood8(idx,costmap_).size());
+
+}
+
+class NearestCellTest : public ::testing::Test{
+protected:
+    virtual void SetUp(){
+        //create map of 10 x 10
+        costmap_.resizeMap(9,9,0.1,0,0);
+        unsigned char* map = costmap_.getCharMap();
+        const unsigned int size_x = costmap_.getSizeInCellsX(), size_y = costmap_.getSizeInCellsY();
+
+        std::fill(map, map+ (size_x*size_y)/2, 0);
+        std::fill(map+(size_x*size_y)/2 + 1, map+(size_x*size_y), 1);
+    }
+
+    costmap_2d::Costmap2D costmap_;
+};
+
+TEST_F(NearestCellTest, sameCell)
+{
+    unsigned int input = 80;
+    unsigned int result;
+    ASSERT_TRUE(frontier_exploration::nearestCell(result,input,1,costmap_));
+    ASSERT_EQ(input,result);
+
+}
+
+TEST_F(NearestCellTest, differentCell)
+{
+    unsigned int input = 20;
+    unsigned int result;
+    ASSERT_TRUE(frontier_exploration::nearestCell(result,input,1,costmap_));
+    ASSERT_NE(input,result);
+
+}
+
+TEST_F(NearestCellTest, offMap)
+{
+    unsigned int input = std::numeric_limits<unsigned int>::max();
+    unsigned int result;
+    ASSERT_FALSE(frontier_exploration::nearestCell(result,input,1,costmap_));
 
 }
 

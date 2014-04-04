@@ -88,6 +88,10 @@ bool nearestCell(unsigned int &result, unsigned int start, unsigned char val, co
     const unsigned char* map = costmap.getCharMap();
     const unsigned int size_x = costmap.getSizeInCellsX(), size_y = costmap.getSizeInCellsY();
 
+    if(start > size_x * size_y -1){
+        return false;
+    }
+
     //initialize breadth first search
     std::queue<unsigned int> bfs;
     std::vector<bool> visited_flag(size_x * size_y, false);
