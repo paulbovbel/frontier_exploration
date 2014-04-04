@@ -42,9 +42,9 @@ namespace frontier_exploration
         configured_ = false;
         marked_ = false;
 
-        bool track_unknown_space;
-        nh_.param("track_unknown_space", track_unknown_space, layered_costmap_->isTrackingUnknown());
-        if(track_unknown_space){
+        bool explore_clear_space;
+        nh_.param("explore_clear_space", explore_clear_space, true);
+        if(explore_clear_space){
           default_value_ = NO_INFORMATION;
         }else{
           default_value_ = FREE_SPACE;
@@ -52,7 +52,7 @@ namespace frontier_exploration
 
         matchSize();
 
-        nh_.param<bool>("resize_to_boundary", resize_to_boundary_, false);
+        nh_.param<bool>("resize_to_boundary", resize_to_boundary_, true);
         nh_.param<std::string>("frontier_travel_point", frontier_travel_point_, "closest");
 
         polygonService_ = nh_.advertiseService("update_boundary_polygon", &BoundedExploreLayer::updateBoundaryPolygonService, this);

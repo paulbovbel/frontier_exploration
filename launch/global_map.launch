@@ -25,14 +25,13 @@
             resolution: 0.05
 
             rolling_window: false
-
-            #set to false for gmapping, true if re-exploring a known area
-            track_unknown_space: false
+            track_unknown_space: true
 
             plugins: 
 
                 - {name: static,           type: "costmap_2d::StaticLayer"}            
                 - {name: explore_boundary, type: "frontier_exploration::BoundedExploreLayer"}
+                #Can disable sensor layer if gmapping is fast enough to update scans
                 - {name: sensor,           type: "costmap_2d::ObstacleLayer"}
                 - {name: inflation,        type: "costmap_2d::InflationLayer"}
 
@@ -45,6 +44,8 @@
             explore_boundary:
                 resize_to_boundary: false
                 frontier_travel_point: closest
+                #set to false for gmapping, true if re-exploring a known area
+                explore_clear_space: false
 
             sensor:
                 observation_sources: laser
