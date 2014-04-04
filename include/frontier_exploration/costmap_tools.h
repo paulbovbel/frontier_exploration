@@ -9,12 +9,11 @@ namespace frontier_exploration{
  * @param idx input cell index
  * @return neighbour cell indexes
  */
-std::vector<unsigned int> nhood4(unsigned int idx, const costmap_2d::Costmap2D* costmap){
+std::vector<unsigned int> nhood4(unsigned int idx, const costmap_2d::Costmap2D& costmap){
     //get 4-connected neighbourhood indexes, check for edge of map
     std::vector<unsigned int> out;
 
-    unsigned int size_x_ = costmap->getSizeInCellsX();
-    unsigned int size_y_ = costmap->getSizeInCellsY();
+    unsigned int size_x_ = costmap.getSizeInCellsX(), size_y_ = costmap.getSizeInCellsY();
 
     if (idx > size_x_ * size_y_ -1){
         ROS_WARN("Evaluating nhood for offmap point");
@@ -42,12 +41,11 @@ std::vector<unsigned int> nhood4(unsigned int idx, const costmap_2d::Costmap2D* 
  * @param idx input cell index
  * @return neighbour cell indexes
  */
-std::vector<unsigned int> nhood8(unsigned int idx, const costmap_2d::Costmap2D* costmap){
+std::vector<unsigned int> nhood8(unsigned int idx, const costmap_2d::Costmap2D& costmap){
     //get 8-connected neighbourhood indexes, check for edge of map
     std::vector<unsigned int> out = nhood4(idx, costmap);
 
-    unsigned int size_x_ = costmap->getSizeInCellsX();
-    unsigned int size_y_ = costmap->getSizeInCellsY();
+    unsigned int size_x_ = costmap.getSizeInCellsX(), size_y_ = costmap.getSizeInCellsY();
 
     if (idx > size_x_ * size_y_ -1){
         return out;

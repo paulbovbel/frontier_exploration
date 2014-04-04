@@ -105,7 +105,7 @@ private:
      * @param costmap Costmap to search
      * @return List of all frontiers found on costmap, reachable from specified position
      */
-    std::list<frontier_exploration::Frontier> findFrontiers(geometry_msgs::Point position, costmap_2d::Costmap2D* costmap);
+    std::list<frontier_exploration::Frontier> findFrontiers(geometry_msgs::Point position, const costmap_2d::Costmap2D& costmap);
 
     /**
      * @brief Starting from an initial cell, build a frontier from valid adjacent cells
@@ -115,7 +115,7 @@ private:
      * @param map Pointer to costmap data
      * @return Structure containing information about assembled frontier
      */
-    frontier_exploration::Frontier buildFrontier(unsigned int initial_cell, unsigned int robot, std::vector<bool>& frontier_flag, const unsigned char* map);
+    frontier_exploration::Frontier buildFrontier(unsigned int initial_cell, unsigned int robot, std::vector<bool>& frontier_flag, const costmap_2d::Costmap2D& costmap);
 
     /**
      * @brief Evaluate if candidate cell is a valid candidate for a new frontier.
@@ -124,7 +124,7 @@ private:
      * @param map Pointer to costmap data
      * @return True if cell is candidate
      */
-    bool isNewFrontierCell(unsigned int idx, const std::vector<bool>& frontier_flag, const unsigned char* map);
+    bool isNewFrontierCell(unsigned int idx, const std::vector<bool>& frontier_flag, const costmap_2d::Costmap2D& costmap);
 
     /**
      * @brief Find nearest cell of a specified value
@@ -134,7 +134,7 @@ private:
      * @param map Reference to map data
      * @return True if a cell with the requested value was found
      */
-    bool nearestCell(unsigned int &result, unsigned int start, unsigned char val, const unsigned char* map);
+    bool nearestCell(unsigned int &result, unsigned int start, unsigned char val, const costmap_2d::Costmap2D& costmap);
 
     void reconfigureCB(costmap_2d::GenericPluginConfig &config, uint32_t level);
 

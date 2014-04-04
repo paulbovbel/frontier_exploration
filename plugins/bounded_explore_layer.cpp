@@ -102,9 +102,10 @@ namespace frontier_exploration
             tf_listener_.transformPose(layered_costmap_->getGlobalFrameID(),temp_pose,start_pose);
         }
 
-
-
-        std::list<Frontier> frontier_list = findFrontiers(start_pose.pose.position, layered_costmap_->getCostmap());
+        //make sure costmap is consistent and locked
+        boost::unique_lock < boost::shared_mutex > lock(*(layered_costmap_->getCostmap()->getLock()));
+        std::list<Frontier> frontier_list = findFrontiers(start_pose.pose.position, *(layered_costmap_->getCostmap()));
+        lock.unlock();
 
         if(frontier_list.size() == 0){
             ROS_DEBUG("No frontiers found, exploration complete");
@@ -157,33 +158,29 @@ namespace frontier_exploration
 
     }
 
-    std::list<frontier_exploration::Frontier> BoundedExploreLayer::findFrontiers(geometry_msgs::Point position, costmap_2d::Costmap2D* costmap){
+    std::list<frontier_exploration::Frontier> BoundedExploreLayer::findFrontiers(geometry_msgs::Point position, const costmap_2d::Costmap2D& costmap){
 
         std::list<Frontier> frontier_list;
-        unsigned int mx,my;
+        const unsigned char* map = costmap.getCharMap();
+        const unsigned int size_x = costmap.getSizeInCellsX(), size_y = costmap.getSizeInCellsY();
 
-        //Check if robot is outside costmap bounds before searching
-        if (!worldToMap(position.x,position.y,mx,my)){
+        //Sanity check that robot is inside costmap bounds before searching
+        unsigned int mx,my;
+        if (!costmap.worldToMap(position.x,position.y,mx,my)){
             ROS_ERROR("Robot out of costmap bounds, cannot search for frontiers");
             return frontier_list;
         }
 
-        unsigned int pos = getIndex(mx,my);
-
-        //make sure costmap is consistent and locked
-        boost::unique_lock < boost::shared_mutex > lock(*(costmap->getLock()));
-        unsigned char* map = costmap->getCharMap();
-
         //initialize flag arrays to keep track of visited and frontier cells
-        std::vector<bool> frontier_flag(size_x_ * size_y_, false);
-        std::vector<bool> visited_flag(size_x_ * size_y_, false);
+        std::vector<bool> frontier_flag(size_x * size_y, false);
+        std::vector<bool> visited_flag(size_x * size_y, false);
 
         //initialize breadth first search
         std::queue<unsigned int> bfs;
 
         //find closest clear cell to start search
-        unsigned int clear;
-        if(nearestCell(clear, pos, FREE_SPACE, map)){
+        unsigned int clear, pos = costmap.getIndex(mx,my);
+        if(nearestCell(clear, pos, FREE_SPACE, costmap)){
             bfs.push(clear);
         }else{
             bfs.push(pos);
@@ -196,15 +193,15 @@ namespace frontier_exploration
             bfs.pop();
 
             //iterate over 4-connected neighbourhood
-            BOOST_FOREACH(unsigned nbr, nhood4(idx, this)){
+            BOOST_FOREACH(unsigned nbr, nhood4(idx, costmap)){
                 //add to queue all free, unvisited cells, use descending search in case initialized on non-free cell
                 if(map[nbr] <= map[idx] && !visited_flag[nbr]){
                     visited_flag[nbr] = true;
                     bfs.push(nbr);
                     //check if cell is new frontier cell (unvisited, NO_INFORMATION, free neighbour)
-                }else if(isNewFrontierCell(nbr,frontier_flag,map)){
+                }else if(isNewFrontierCell(nbr, frontier_flag, costmap)){
                     frontier_flag[nbr] = true;
-                    Frontier new_frontier = buildFrontier(nbr, pos, frontier_flag,map);
+                    Frontier new_frontier = buildFrontier(nbr, pos, frontier_flag, costmap);
                     if(new_frontier.size > 1){
                         frontier_list.push_back(new_frontier);
                     }
@@ -215,7 +212,7 @@ namespace frontier_exploration
         return frontier_list;
     }
 
-    frontier_exploration::Frontier BoundedExploreLayer::buildFrontier(unsigned int initial_cell, unsigned int robot, std::vector<bool>& frontier_flag, const unsigned char* map){
+    frontier_exploration::Frontier BoundedExploreLayer::buildFrontier(unsigned int initial_cell, unsigned int robot, std::vector<bool>& frontier_flag, const costmap_2d::Costmap2D& costmap){
 
         //initialize frontier structure
         Frontier output;
@@ -226,8 +223,8 @@ namespace frontier_exploration
 
         //record initial contact point for frontier
         unsigned int ix, iy;
-        indexToCells(initial_cell,ix,iy);
-        mapToWorld(ix,iy,output.initial.x,output.initial.y);
+        costmap.indexToCells(initial_cell,ix,iy);
+        costmap.mapToWorld(ix,iy,output.initial.x,output.initial.y);
 
         //push initial gridcell onto queue
         std::queue<unsigned int> bfs;
@@ -236,24 +233,24 @@ namespace frontier_exploration
         //cache robot position in world coords
         unsigned int rx,ry;
         double robot_x, robot_y;
-        indexToCells(robot,rx,ry);
-        mapToWorld(rx,ry,robot_x,robot_y);
+        costmap.indexToCells(robot,rx,ry);
+        costmap.mapToWorld(rx,ry,robot_x,robot_y);
 
         while(!bfs.empty()){
             unsigned int idx = bfs.front();
             bfs.pop();
 
             //try adding cells in 8-connected neighborhood to frontier
-            BOOST_FOREACH(unsigned int nbr, nhood8(idx, this)){
+            BOOST_FOREACH(unsigned int nbr, nhood8(idx, costmap)){
                 //check if neighbour is a potential frontier cell
-                if(isNewFrontierCell(nbr,frontier_flag, map)){
+                if(isNewFrontierCell(nbr,frontier_flag, costmap)){
 
                     //mark cell as frontier
                     frontier_flag[nbr] = true;
                     unsigned int mx,my;
                     double wx,wy;
-                    indexToCells(nbr,mx,my);
-                    mapToWorld(mx,my,wx,wy);
+                    costmap.indexToCells(nbr,mx,my);
+                    costmap.mapToWorld(mx,my,wx,wy);
 
                     //update frontier size
                     output.size++;
@@ -282,7 +279,9 @@ namespace frontier_exploration
         return output;
     }
 
-    bool BoundedExploreLayer::isNewFrontierCell(unsigned int idx, const std::vector<bool>& frontier_flag, const unsigned char* map){
+    bool BoundedExploreLayer::isNewFrontierCell(unsigned int idx, const std::vector<bool>& frontier_flag, const costmap_2d::Costmap2D& costmap){
+
+        const unsigned char* map = costmap.getCharMap();
 
         //check that cell is unknown and not already marked as frontier
         if(map[idx] != NO_INFORMATION || frontier_flag[idx]){
@@ -290,7 +289,7 @@ namespace frontier_exploration
         }
 
         //frontier cells should have at least one cell in 4-connected neighbourhood that is free
-        BOOST_FOREACH(unsigned int nbr, nhood4(idx, this)){
+        BOOST_FOREACH(unsigned int nbr, nhood4(idx, costmap)){
             if(map[nbr] == FREE_SPACE){
                 return true;
             }
@@ -300,11 +299,14 @@ namespace frontier_exploration
 
     }
 
-    bool BoundedExploreLayer::nearestCell(unsigned int &result, unsigned int start, unsigned char val, const unsigned char* map){
+    bool BoundedExploreLayer::nearestCell(unsigned int &result, unsigned int start, unsigned char val, const costmap_2d::Costmap2D& costmap){
+
+        const unsigned char* map = costmap.getCharMap();
+        const unsigned int size_x = costmap.getSizeInCellsX(), size_y = costmap.getSizeInCellsY();
 
         //initialize breadth first search
         std::queue<unsigned int> bfs;
-        std::vector<bool> visited_flag(size_x_ * size_y_, false);
+        std::vector<bool> visited_flag(size_x * size_y, false);
 
         //push initial cell
         bfs.push(start);
@@ -322,7 +324,7 @@ namespace frontier_exploration
             }
 
             //iterate over all adjacent unvisited cells
-            BOOST_FOREACH(unsigned nbr, nhood8(idx, this)){
+            BOOST_FOREACH(unsigned nbr, nhood8(idx, costmap)){
                 if(!visited_flag[nbr]){
                     bfs.push(nbr);
                     visited_flag[nbr] = true;
