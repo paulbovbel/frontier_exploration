@@ -88,7 +88,7 @@ bool nearestCell(unsigned int &result, unsigned int start, unsigned char val, co
     const unsigned char* map = costmap.getCharMap();
     const unsigned int size_x = costmap.getSizeInCellsX(), size_y = costmap.getSizeInCellsY();
 
-    if(start > size_x * size_y -1){
+    if(start >= size_x * size_y){
         return false;
     }
 
