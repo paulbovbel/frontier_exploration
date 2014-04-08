@@ -38,7 +38,7 @@
             static:
                 #Can pull data from gmapping, map_server or a non-rolling costmap            
                 map_topic: /map
-                #map_topic: move_base/global_costmap/costmap   
+                # map_topic: move_base/global_costmap/costmap   
                 subscribe_to_updates: true
 
             explore_boundary:
