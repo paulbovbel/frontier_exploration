@@ -2,8 +2,8 @@
 Changelog for package frontier_exploration
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+0.2.1 (2014-04-15)
+------------------
 * Update example launch files
 * Update package.xml
 * Contributors: Paul Bovbel
