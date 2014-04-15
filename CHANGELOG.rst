@@ -2,6 +2,12 @@
 Changelog for package frontier_exploration
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Update example launch files
+* Update package.xml
+* Contributors: Paul Bovbel
+
 0.2.0 (2014-04-04)
 ------------------
 * rename test file
