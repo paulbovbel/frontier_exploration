@@ -7,4 +7,6 @@ Wiki: http://wiki.ros.org/frontier_exploration
 
 API Doc: http://docs.ros.org/hydro/api/frontier_exploration/html/annotated.html
 
+Video:
+
 [![Demo Video](http://img.youtube.com/vi/3W1ufJ7rpCA/0.jpg)](https://www.youtube.com/watch?v=3W1ufJ7rpCA)
