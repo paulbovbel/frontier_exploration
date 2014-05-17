@@ -34,7 +34,7 @@ public:
     FrontierExplorationServer(std::string name) :
         tf_listener_(ros::Duration(10.0)),
         private_nh_("~"),
-        explore_costmap_ros_(0),
+        //explore_costmap_ros_(0),
         as_(nh_, name, boost::bind(&FrontierExplorationServer::executeCb, this, _1), false),
         move_client_("move_base",true),
         retry_(5)
@@ -45,10 +45,6 @@ public:
         as_.start();
     }
 
-    ~FrontierExplorationServer(){
-        delete explore_costmap_ros_;
-    }
-
 private:
 
     ros::NodeHandle nh_;
@@ -56,7 +52,8 @@ private:
     tf::TransformListener tf_listener_;
     actionlib::SimpleActionServer<frontier_exploration::ExploreTaskAction> as_;
 
-    costmap_2d::Costmap2DROS* explore_costmap_ros_;
+    //costmap_2d::Costmap2DROS* explore_costmap_ros_;
+    boost::shared_ptr<costmap_2d::Costmap2DROS> explore_costmap_ros_;
     double frequency_, goal_aliasing_;
     bool success_, moving_;
     int retry_;
@@ -79,7 +76,7 @@ private:
 
         //create exploration costmap
         if(!explore_costmap_ros_){
-            explore_costmap_ros_ = new costmap_2d::Costmap2DROS("explore_costmap", tf_listener_);
+            explore_costmap_ros_ = boost::shared_ptr<costmap_2d::Costmap2DROS>(new costmap_2d::Costmap2DROS("explore_costmap", tf_listener_));
         }else{
             explore_costmap_ros_->resetLayers();
         }
