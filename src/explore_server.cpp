@@ -34,7 +34,6 @@ public:
     FrontierExplorationServer(std::string name) :
         tf_listener_(ros::Duration(10.0)),
         private_nh_("~"),
-        //explore_costmap_ros_(0),
         as_(nh_, name, boost::bind(&FrontierExplorationServer::executeCb, this, _1), false),
         move_client_("move_base",true),
         retry_(5)
@@ -52,7 +51,6 @@ private:
     tf::TransformListener tf_listener_;
     actionlib::SimpleActionServer<frontier_exploration::ExploreTaskAction> as_;
 
-    //costmap_2d::Costmap2DROS* explore_costmap_ros_;
     boost::shared_ptr<costmap_2d::Costmap2DROS> explore_costmap_ros_;
     double frequency_, goal_aliasing_;
     bool success_, moving_;
@@ -239,7 +237,6 @@ private:
      */
     void doneMovingCb(const actionlib::SimpleClientGoalState& state, const move_base_msgs::MoveBaseResultConstPtr& result){
 
-        //TODO: Some kind of error recovery
         if (state == actionlib::SimpleClientGoalState::ABORTED){
             ROS_ERROR("Failed to move");
             as_.setAborted();

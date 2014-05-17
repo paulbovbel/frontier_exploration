@@ -155,7 +155,6 @@ public:
         private_nh_("~"),
         waiting_for_center_(false)
     {
-
         input_.header.frame_id = "map";
         private_nh_.param<double>("proximity", proximity_, 0.2);
         point_ = nh_.subscribe("/clicked_point",10,&FrontierExplorationClient::pointCb, this);
