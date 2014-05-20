@@ -2,7 +2,7 @@
 <package>
   <name>frontier_exploration</name>
   <version>0.2.1</version>
-  <description>Frontier exploration implementation using a ROS costmap plugin. Usable in standalone operation through rviz UI, or through actionlib/service hooks.</description>
+  <description>Frontier exploration implementation in ROS, accepts exploration goals via <a href="http://www.ros.org/wiki/actionlib">actionlib</a> (Rviz UI provided), sends movement commands to <a href="http://www.ros.org/wiki/move_base">move_base</a>.</description>
   <author email="paul@bovbel.com">Paul Bovbel</author>
   <maintainer email="paul@bovbel.com">Paul Bovbel</maintainer>
 
