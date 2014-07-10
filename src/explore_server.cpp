@@ -126,8 +126,13 @@ private:
 
             //check if robot is not within exploration boundary and needs to return to center of search area
             if(!pointInPolygon(eval_pose.pose.position,goal->explore_boundary.polygon)){
-                ROS_DEBUG("Robot not in exploration boundary, traveling to center");
-                if(success_) ROS_WARN("Robot left exploration boundary, returning to center");
+                
+                //check if robot has explored at least one frontier, and promote debug message to warning
+                if(success_){
+                    ROS_WARN("Robot left exploration boundary, returning to center");
+                }else{
+                    ROS_DEBUG("Robot not initially in exploration boundary, traveling to center");
+                }
                 //get current robot position in frame of exploration center
                 geometry_msgs::PointStamped eval_point;
                 eval_point.header = eval_pose.header;
