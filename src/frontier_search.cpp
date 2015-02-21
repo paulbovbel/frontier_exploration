@@ -14,7 +14,7 @@ using costmap_2d::LETHAL_OBSTACLE;
 using costmap_2d::NO_INFORMATION;
 using costmap_2d::FREE_SPACE;
 
-FrontierSearch::FrontierSearch(costmap_2d::Costmap2D& costmap) : costmap_(costmap) { }
+FrontierSearch::FrontierSearch(costmap_2d::Costmap2D &costmap) : costmap_(costmap) { }
 
 std::list<Frontier> FrontierSearch::searchFrom(geometry_msgs::Point position){
 

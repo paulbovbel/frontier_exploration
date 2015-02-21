@@ -46,9 +46,9 @@ TEST(PointsAdjacentTest, different)
 {
     geometry_msgs::Point a, b;
     a.x = 1;
-    ASSERT_FALSE(frontier_exploration::pointsAdjacent(a,b,0));
-    ASSERT_FALSE(frontier_exploration::pointsAdjacent(a,b,0.1));
-    ASSERT_TRUE(frontier_exploration::pointsAdjacent(a,b,1));
+    ASSERT_FALSE(frontier_exploration::pointsNearby(a,b,0));
+    ASSERT_FALSE(frontier_exploration::pointsNearby(a,b,0.1));
+    ASSERT_TRUE(frontier_exploration::pointsNearby(a,b,1));
 }
 
 TEST(PointsAdjacentTest, identical)
@@ -56,9 +56,9 @@ TEST(PointsAdjacentTest, identical)
     geometry_msgs::Point a, b;
     a.x = 1;
     b.x = 1;
-    ASSERT_TRUE(frontier_exploration::pointsAdjacent(a,b,0));
-    ASSERT_TRUE(frontier_exploration::pointsAdjacent(a,b,0.1));
-    ASSERT_TRUE(frontier_exploration::pointsAdjacent(a,b,1));
+    ASSERT_TRUE(frontier_exploration::pointsNearby(a,b,0));
+    ASSERT_TRUE(frontier_exploration::pointsNearby(a,b,0.1));
+    ASSERT_TRUE(frontier_exploration::pointsNearby(a,b,1));
 }
 
 int main(int argc, char **argv){

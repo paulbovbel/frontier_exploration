@@ -40,8 +40,6 @@ private:
     ros::WallTimer point_viz_timer_;
     geometry_msgs::PolygonStamped input_;
 
-    double proximity_;
-
     bool waiting_for_center_;
 
     /**
@@ -65,27 +63,24 @@ private:
             points.action = line_strip.action = visualization_msgs::Marker::ADD;
             points.pose.orientation.w = line_strip.pose.orientation.w = 1.0;
 
-            points.scale.x = 0.2;
+            points.scale.x = points.scale.y = 0.1;
             line_strip.scale.x = 0.05;
 
-            points.color.a = 1.0;
-            points.color.b = 1.0;
-            line_strip.color.b = 1.0;
-            line_strip.color.a = 1.0;
-
-            points.points.push_back(costmap_2d::toPoint(input_.polygon.points.front()));
+//            points.points.push_back(costmap_2d::toPoint(input_.polygon.points.front()));
 
             BOOST_FOREACH(geometry_msgs::Point32 point, input_.polygon.points){
                 line_strip.points.push_back(costmap_2d::toPoint(point));
+                points.points.push_back(costmap_2d::toPoint(point));
             }
 
             if(waiting_for_center_){
                 line_strip.points.push_back(costmap_2d::toPoint(input_.polygon.points.front()));
+                points.color.a = points.color.r = line_strip.color.r = line_strip.color.a = 1.0;
+            }else{
+                points.color.a = points.color.b = line_strip.color.b = line_strip.color.a = 1.0;
             }
         }else{
-
             points.action = line_strip.action = visualization_msgs::Marker::DELETE;
-
         }
         point_viz_pub_.publish(points);
         point_viz_pub_.publish(line_strip);
@@ -98,6 +93,7 @@ private:
      */
     void pointCb(const geometry_msgs::PointStampedConstPtr& point){
 
+        double average_distance = polygonPerimeter(input_.polygon) / input_.polygon.points.size();
         if(waiting_for_center_){
             //flag is set so this is the last point of boundary polygon, i.e. center
 
@@ -125,8 +121,9 @@ private:
             ROS_ERROR("Frame mismatch, restarting polygon selection");
             input_.polygon.points.clear();
 
-        }else if(input_.polygon.points.size() > 1 && pointsAdjacent(costmap_2d::toPoint(input_.polygon.points.front()), point->point, proximity_)){
-            //check if last boundary point, i.e. adjacent to first point
+        }else if(input_.polygon.points.size() > 1 && pointsNearby(input_.polygon.points.front(), point->point,
+                                                                    average_distance*0.1)){
+            //check if last boundary point, i.e. nearby to first point
 
             if(input_.polygon.points.size() < 3){
                 ROS_ERROR("Not a valid polygon, restarting");
@@ -156,10 +153,10 @@ public:
         waiting_for_center_(false)
     {
         input_.header.frame_id = "map";
-        private_nh_.param<double>("proximity", proximity_, 0.2);
         point_ = nh_.subscribe("/clicked_point",10,&FrontierExplorationClient::pointCb, this);
         point_viz_pub_ = nh_.advertise<visualization_msgs::Marker>("exploration_polygon_marker", 10);
         point_viz_timer_ = nh_.createWallTimer(ros::WallDuration(0.1), boost::bind(&FrontierExplorationClient::vizPubCb, this));
+        ROS_INFO("Please use the 'Point' tool in Rviz to select an exporation boundary.");
     }    
 
 };
