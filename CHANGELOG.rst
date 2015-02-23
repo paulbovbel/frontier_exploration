@@ -2,8 +2,8 @@
 Changelog for package frontier_exploration
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+0.2.3 (2015-02-23)
+------------------
 * Improve explore client user feedback
 * removed common_msgs depency
   since depending on metapackages is deprecated and all needed subpackages are included anyways
