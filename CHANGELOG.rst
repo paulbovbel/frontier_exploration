@@ -2,6 +2,14 @@
 Changelog for package frontier_exploration
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Improve explore client user feedback
+* removed common_msgs depency
+  since depending on metapackages is deprecated and all needed subpackages are included anyways
+* Add travis builds
+* Contributors: Henning Deeken, Paul Bovbel
+
 0.2.2 (2014-09-13)
 ------------------
 * clean up conditionals and comments for more logical flow
