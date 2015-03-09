@@ -125,7 +125,7 @@ private:
             }
 
             //check if robot is not within exploration boundary and needs to return to center of search area
-            if(!pointInPolygon(eval_pose.pose.position,goal->explore_boundary.polygon)){
+            if(polygon.points.size() > 0 && !pointInPolygon(eval_pose.pose.position,goal->explore_boundary.polygon)){
                 
                 //check if robot has explored at least one frontier, and promote debug message to warning
                 if(success_){
