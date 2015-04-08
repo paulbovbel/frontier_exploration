@@ -66,8 +66,6 @@ private:
             points.scale.x = points.scale.y = 0.1;
             line_strip.scale.x = 0.05;
 
-//            points.points.push_back(costmap_2d::toPoint(input_.polygon.points.front()));
-
             BOOST_FOREACH(geometry_msgs::Point32 point, input_.polygon.points){
                 line_strip.points.push_back(costmap_2d::toPoint(point));
                 points.points.push_back(costmap_2d::toPoint(point));
