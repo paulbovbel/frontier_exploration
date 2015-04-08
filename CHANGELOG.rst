@@ -2,8 +2,8 @@
 Changelog for package frontier_exploration
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+0.2.5 (2015-04-08)
+------------------
 * Remove lazy initialization
 * Contributors: Paul Bovbel
 
