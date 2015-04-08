@@ -40,6 +40,9 @@ public:
     {
         private_nh_.param<double>("frequency", frequency_, 0.0);
         private_nh_.param<double>("goal_aliasing", goal_aliasing_, 0.1);
+
+        explore_costmap_ros_ = boost::shared_ptr<costmap_2d::Costmap2DROS>(new costmap_2d::Costmap2DROS("explore_costmap", tf_listener_));
+
         as_.registerPreemptCallback(boost::bind(&FrontierExplorationServer::preemptCb, this));
         as_.start();
     }
@@ -72,12 +75,7 @@ private:
         success_ = false;
         moving_ = false;
 
-        //create exploration costmap
-        if(!explore_costmap_ros_){
-            explore_costmap_ros_ = boost::shared_ptr<costmap_2d::Costmap2DROS>(new costmap_2d::Costmap2DROS("explore_costmap", tf_listener_));
-        }else{
-            explore_costmap_ros_->resetLayers();
-        }
+        explore_costmap_ros_->resetLayers();
 
         //create costmap services
         ros::ServiceClient updateBoundaryPolygon = private_nh_.serviceClient<frontier_exploration::UpdateBoundaryPolygon>("explore_costmap/explore_boundary/update_boundary_polygon");
