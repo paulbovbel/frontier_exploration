@@ -90,8 +90,9 @@ private:
      * @param point Received point from rviz
      */
     void pointCb(const geometry_msgs::PointStampedConstPtr& point){
-
+      
         double average_distance = polygonPerimeter(input_.polygon) / input_.polygon.points.size();
+
         if(waiting_for_center_){
             //flag is set so this is the last point of boundary polygon, i.e. center
 

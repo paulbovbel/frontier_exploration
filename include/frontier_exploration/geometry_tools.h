@@ -14,7 +14,7 @@ namespace frontier_exploration{
   * @return Distance between two points
   */
   template<typename T, typename S>
-  double pointsDistance(T one, S two){
+  double pointsDistance(const T &one, const S &two){
       return sqrt(pow(one.x-two.x,2.0) + pow(one.y-two.y,2.0) + pow(one.z-two.z,2.0));
   }
 
@@ -23,14 +23,15 @@ namespace frontier_exploration{
   * @param polygon Polygon to process
   * @return Perimeter of polygon
   */
-  double polygonPerimeter(geometry_msgs::Polygon polygon){
-      if(polygon.points.size() <= 1){
-          return 0;
-      }
+  double polygonPerimeter(const geometry_msgs::Polygon &polygon){
 
-      double perimeter;
-      for (int i = 0, j = polygon.points.size()-1; i < polygon.points.size(); j = i++) {
+      double perimeter = 0;
+      if(polygon.points.size()   > 1)
+      {
+        for (int i = 0, j = polygon.points.size() - 1; i < polygon.points.size(); j = i++)
+        {
           perimeter += pointsDistance(polygon.points[i], polygon.points[j]);
+        }
       }
       return perimeter;
   }
@@ -43,7 +44,7 @@ namespace frontier_exploration{
 * @return True if approximately adjacent, false otherwise
 */
   template<typename T, typename S>
-  bool pointsNearby(T one, S two, double proximity){
+  bool pointsNearby(const T &one, const S &two, const double &proximity){
       return pointsDistance(one, two) <= proximity;
   }
 
@@ -54,7 +55,7 @@ namespace frontier_exploration{
 * @return True if point is inside polygon, false otherwise
 */
   template<typename T>
-  bool pointInPolygon(T point, geometry_msgs::Polygon polygon){
+  bool pointInPolygon(const T &point, const geometry_msgs::Polygon &polygon){
       int cross = 0;
       for (int i = 0, j = polygon.points.size()-1; i < polygon.points.size(); j = i++) {
           if ( ((polygon.points[i].y > point.y) != (polygon.points[j].y>point.y)) &&
@@ -72,7 +73,7 @@ namespace frontier_exploration{
 * @return Yaw angle of vector
 */
   template<typename T, typename S>
-  double yawOfVector(T origin, S end){
+  double yawOfVector(const T &origin, const S &end){
 
       double delta_x, delta_y;
       delta_x = end.x - origin.x;
