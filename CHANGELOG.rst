@@ -2,6 +2,12 @@
 Changelog for package frontier_exploration
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Fix compiler optimization issue where perimeter is always 0
+* Allow empty polygon goals for unbounded exploration
+* Contributors: Paul Bovbel
+
 0.2.3 (2015-02-23)
 ------------------
 * Improve explore client user feedback
