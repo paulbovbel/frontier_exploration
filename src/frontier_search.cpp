@@ -28,7 +28,7 @@ std::list<Frontier> FrontierSearch::searchFrom(geometry_msgs::Point position){
     }
 
     //make sure map is consistent and locked for duration of search
-    boost::unique_lock < boost::shared_mutex > lock(*(costmap_.getLock()));
+    boost::unique_lock < costmap_2d::Costmap2D::mutex_t > lock(*(costmap_.getMutex()));
 
     map_ = costmap_.getCharMap();
     size_x_ = costmap_.getSizeInCellsX();
