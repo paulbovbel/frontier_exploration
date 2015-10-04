@@ -1,0 +1,10 @@
+#Boundary for frontier exploration
+geometry_msgs/PolygonStamped explore_boundary
+#Center point for frontier exploration, inside explore_boundary
+geometry_msgs/PointStamped explore_center
+---
+---
+#Current target frontier to explore
+geometry_msgs/PoseStamped next_frontier
+#Current position of robot
+geometry_msgs/PoseStamped base_position
