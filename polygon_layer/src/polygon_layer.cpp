@@ -10,12 +10,14 @@ PLUGINLIB_EXPORT_CLASS(polygon_layer::PolygonLayer, costmap_2d::Layer)
 namespace polygon_layer
 {
 
-// using costmap_2d::LETHAL_OBSTACLE;
-
 PolygonLayer::PolygonLayer() :
   tf_buffer_(),
-  tf_listener_(tf_buffer_),
-  enabled_(true) { }
+  tf_listener_(tf_buffer_)
+{
+  enabled_ = true;
+  current_ = true;
+  default_value_ = costmap_2d::NO_INFORMATION;
+}
 
 void PolygonLayer::onInitialize()
 {
@@ -42,118 +44,109 @@ bool PolygonLayer::setPolygonCb(exploration_msgs::SetPolygon::Request &req, expl
   return setPolygon(req.polygon);
 }
 
-bool PolygonLayer::setPolygon(geometry_msgs::PolygonStamped input_polygon)
+bool PolygonLayer::setPolygon(const geometry_msgs::PolygonStamped &polygon)
 {
-  current_ = false;
+  boost::unique_lock<costmap_2d::Costmap2D::mutex_t> lock(*(layered_costmap_->getCostmap()->getMutex()));
 
-  if (input_polygon.polygon.points.empty())
+  if (polygon.polygon.points.empty())
   {
     ROS_DEBUG_NAMED(name_, "Empty polygon provided, clearing boundary polygon");
-    polygon_.polygon.points.clear();
-    current_polygon_pub_.publish(polygon_);
+    resetMaps();
+    has_polygon_ = false;
+    current_polygon_pub_.publish(geometry_msgs::PolygonStamped());
   }
   else
   {
     // Check that input polygon is transformable to costmap's global frame
     std::string tf_error;
-    if (!tf_buffer_.canTransform(layered_costmap_->getGlobalFrameID(), input_polygon.header.frame_id,
-                                 input_polygon.header.stamp, &tf_error))
+    if (!tf_buffer_.canTransform(layered_costmap_->getGlobalFrameID(), polygon.header.frame_id,
+                                 polygon.header.stamp, &tf_error))
     {
       ROS_ERROR_STREAM_NAMED(name_, "Cannot transform input polygon into costmap frame, " << tf_error);
     }
     else
     {
-      tf_buffer_.transform(input_polygon, polygon_, layered_costmap_->getGlobalFrameID());
+      geometry_msgs::PolygonStamped costmap_frame_polygon;
+      tf_buffer_.transform(polygon, costmap_frame_polygon, layered_costmap_->getGlobalFrameID());
       ROS_DEBUG_NAMED(name_, "Updated boundary polygon");
 
+      updateBoundsFromPolygon(costmap_frame_polygon.polygon);
+
+      int size_x, size_y;
+      worldToMapNoBounds(max_x_ - min_x_, max_y_ - min_y_, size_x, size_y);
       if (resize_to_polygon_)
       {
-        //Find map size and origin by finding min/max points of polygon
-        double min_x = std::numeric_limits<double>::infinity();
-        double min_y = std::numeric_limits<double>::infinity();
-        double max_x = -std::numeric_limits<double>::infinity();
-        double max_y = -std::numeric_limits<double>::infinity();
-
-        BOOST_FOREACH(geometry_msgs::Point32 point, polygon_.polygon.points)
-              {
-                min_x = std::min(min_x, static_cast<double>(point.x));
-                min_y = std::min(min_y, static_cast<double>(point.y));
-                max_x = std::max(max_x, static_cast<double>(point.x));
-                max_y = std::max(max_y, static_cast<double>(point.y));
-              }
-
         //resize the costmap to polygon boundaries, don't change resolution
-        int size_x, size_y;
-        layered_costmap_->getCostmap()->worldToMapNoBounds(max_x - min_x, max_y - min_y, size_x, size_y);
-        layered_costmap_->resizeMap(size_x, size_y, layered_costmap_->getCostmap()->getResolution(), min_x, min_y);
-
+        layered_costmap_->resizeMap(size_x, size_y, layered_costmap_->getCostmap()->getResolution(), min_x_, min_y_);
+        matchSize();
       }
+      else
+      {
+        resizeMap(size_x, size_y, layered_costmap_->getCostmap()->getResolution(), min_x_, min_y_);
+      }
+
+      drawPolygon(costmap_frame_polygon.polygon);
+      has_polygon_ = true;
+      current_polygon_pub_.publish(costmap_frame_polygon);
     }
   }
 
-  current_polygon_pub_.publish(polygon_);
-  current_ = true;
   return true;
-
 }
 
+void PolygonLayer::updateBoundsFromPolygon(const geometry_msgs::Polygon &polygon)
+{
+  min_x_ = std::numeric_limits<double>::infinity();
+  min_y_ = std::numeric_limits<double>::infinity();
+  max_x_ = -std::numeric_limits<double>::infinity();
+  max_y_ = -std::numeric_limits<double>::infinity();
+
+  BOOST_FOREACH(geometry_msgs::Point32 point, polygon.points)
+  {
+    min_x_ = std::min(min_x_, static_cast<double>(point.x));
+    min_y_ = std::min(min_y_, static_cast<double>(point.y));
+    max_x_ = std::max(max_x_, static_cast<double>(point.x));
+    max_y_ = std::max(max_y_, static_cast<double>(point.y));
+  }
+}
+
+void PolygonLayer::drawPolygon(const geometry_msgs::Polygon &polygon)
+{
+  MarkCell marker(costmap_, costmap_2d::LETHAL_OBSTACLE);
+
+  //iterate over neighbouring points in polygon
+  for (int i = 0, j = polygon.points.size() - 1; i < polygon.points.size(); j = i++)
+  {
+
+    int x_1, y_1, x_2, y_2;
+    worldToMapEnforceBounds(polygon.points[i].x, polygon.points[i].y, x_1, y_1);
+    worldToMapEnforceBounds(polygon.points[j].x, polygon.points[j].y, x_2, y_2);
+
+    raytraceLine(marker, x_1, y_1, x_2, y_2);
+  }
+}
 
 void PolygonLayer::updateBounds(double robot_x, double robot_y, double robot_yaw, double *min_x,
                                 double *min_y, double *max_x, double *max_y)
 {
 
   // //check if layer is enabled and configured with a boundary
-  // if (!enabled_ || !configured_){ return; }
-  //
-  // //update the whole costmap
-  // *min_x = getOriginX();
-  // *min_y = getOriginY();
-  // *max_x = getSizeInMetersX()+getOriginX();
-  // *max_y = getSizeInMetersY()+getOriginY();
+  if (!enabled_ || !has_polygon_) { return; }
+
+  *min_x = min_x_;
+  *min_y = min_y_;
+  *max_x = max_x_;
+  *max_y = max_y_;
 
 }
 
 void PolygonLayer::updateCosts(costmap_2d::Costmap2D &master_grid, int min_i, int min_j, int max_i, int max_j)
 {
-  // //check if layer is enabled and configured with a boundary
-  // if (!enabled_ || !configured_){ return; }
-  //
-  // //draw lines between each point in polygon
-  // MarkCell marker(costmap_, LETHAL_OBSTACLE);
-  //
-  // //circular iterator
-  // for(int i = 0, j = polygon_.points.size()-1; i < polygon_.points.size(); j = i++){
-  //
-  //     int x_1, y_1, x_2, y_2;
-  //     worldToMapEnforceBounds(polygon_.points[i].x, polygon_.points[i].y, x_1,y_1);
-  //     worldToMapEnforceBounds(polygon_.points[j].x, polygon_.points[j].y, x_2,y_2);
-  //
-  //     raytraceLine(marker,x_1,y_1,x_2,y_2);
-  // }
-  // //update the master grid from the internal costmap
-  // mapUpdateKeepObstacles(master_grid, min_i, min_j, max_i, max_j);
+  if (!enabled_ || !has_polygon_ ) { return; }
+
+  updateWithMax(master_grid, min_i, min_j, max_i, max_j);
 
 }
 
-// void PolygonLayer::mapUpdateKeepObstacles(costmap_2d::Costmap2D& master_grid, int min_i, int min_j, int max_i, int max_j){
-//     if (!enabled_)
-//         return;
-//
-//     unsigned char* master = master_grid.getCharMap();
-//     unsigned int span = master_grid.getSizeInCellsX();
-//
-//     for (int j = min_j; j < max_j; j++)
-//     {
-//         unsigned int it = span*j+min_i;
-//         for (int i = min_i; i < max_i; i++)
-//         {
-//             //only update master grid if local costmap cell is lethal/higher value, and is not overwriting a lethal obstacle in the master grid
-//             if(master[it] != LETHAL_OBSTACLE && (costmap_[it] == LETHAL_OBSTACLE || costmap_[it] > master[it])){
-//                 master[it] = costmap_[it];
-//             }
-//             it++;
-//         }
-//     }
-//     marked_ = true;
-// }
 }
+

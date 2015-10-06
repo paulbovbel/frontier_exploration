@@ -1,7 +1,7 @@
 #ifndef POLYGON_LAYER_POLYGON_LAYER_H
 #define POLYGON_LAYER_POLYGON_LAYER_H
 
-#include "costmap_2d/layer.h"
+#include "costmap_2d/costmap_layer.h"
 #include "dynamic_reconfigure/server.h"
 #include "tf2_ros/buffer.h"
 #include "tf2_ros/transform_listener.h"
@@ -18,12 +18,10 @@ namespace polygon_layer
 /**
  * @brief costmap_2d layer plugin that draws a polygonal boundary.
  */
-class PolygonLayer : public costmap_2d::Layer
+class PolygonLayer : public costmap_2d::CostmapLayer
 {
 public:
   PolygonLayer();
-
-  ~PolygonLayer();
 
   /**
    * @brief Loads default values and initialize exploration costmap.
@@ -41,11 +39,22 @@ public:
    */
   virtual void updateCosts(costmap_2d::Costmap2D &master_grid, int min_i, int min_j, int max_i, int max_j);
 
+  virtual void deactivate() {}
+
+  virtual void activate() {}
+
+  virtual void reset() {}
+
 private:
 
   bool setPolygonCb(exploration_msgs::SetPolygon::Request &req, exploration_msgs::SetPolygon::Response &res);
 
-  bool setPolygon(geometry_msgs::PolygonStamped input_polygon);
+  bool setPolygon(const geometry_msgs::PolygonStamped &polygon);
+
+  // TODO test
+  void updateBoundsFromPolygon(const geometry_msgs::Polygon &polygon);
+
+  void drawPolygon(const geometry_msgs::Polygon &polygon);
 
   void reconfigureCB(costmap_2d::GenericPluginConfig &config, uint32_t level);
 
@@ -57,9 +66,10 @@ private:
   tf2_ros::TransformListener tf_listener_;
   tf2_ros::Buffer tf_buffer_;
 
-  bool enabled_, resize_to_polygon_;
-  boost::mutex lock_;
-  geometry_msgs::PolygonStamped polygon_;
+  bool resize_to_polygon_;
+  bool has_polygon_;
+  double min_x_, min_y_, max_x_, max_y_;
+//  geometry_msgs::PolygonStamped costmap_frame_polygon_;
 
 };
 
