@@ -12,9 +12,9 @@
         #All standard costmap_2d parameters as in move_base, other than BoundedExploreLayer
         <rosparam ns="explore_costmap" subst_value="true">
             #Sample parameters
-            footprint: [[0.1, 0.0], [0.0, 0.1], [0.0, -0.1], [-0.1, 0.0]]
+            footprint: [[0.1, 0.0], [0.0, 0.1], [-0.1, 0.0], [0.0, -0.1]]
             robot_radius: 0.10
-            
+
             transform_tolerance: 0.5
             update_frequency: 5.0
             publish_frequency: 5.0
@@ -26,8 +26,8 @@
             rolling_window: false
             track_unknown_space: true
 
-            plugins: 
-         
+            plugins:
+
                 - {name: explore_boundary, type: "frontier_exploration::BoundedExploreLayer"}
                 - {name: sensor,           type: "costmap_2d::ObstacleLayer"}
                 - {name: inflation,        type: "costmap_2d::InflationLayer"}
