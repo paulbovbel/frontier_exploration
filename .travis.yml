@@ -1,32 +1,34 @@
-language:
-  - cpp
-  - python
-python:
-  - "2.7"
+# This config file for Travis CI utilizes ros-industrial/industrial_ci package.
+# For more info for the package, see https://github.com/ros-industrial/industrial_ci/blob/master/README.rst
+sudo: required 
+dist: trusty 
+services:
+  - docker
+language: generic 
 compiler:
   - gcc
-
-before_install:
-  - export CI_SOURCE_PATH=$(pwd)
-  - sudo sh -c 'echo "deb http://packages.ros.org/ros-shadow-fixed/ubuntu precise main" > /etc/apt/sources.list.d/ros-latest.list'
-  - wget http://packages.ros.org/ros.key -O - | sudo apt-key add -
-  - sudo apt-get update
-
-install:
-  - sudo apt-get install python-catkin-pkg python-rosdep
-  - sudo rosdep init
-  - rosdep update
-  - rosdep install --from-paths . --ignore-src --rosdistro hydro -y
-
+notifications:
+  email:
+    recipients:
+      - gm130s@gmail.com
+env:
+  global:
+    - ROS_PARALLEL_JOBS=-j1
+    - ROS_PARALLEL_TEST_JOBS=-j1
+  matrix:
+    - ROS_DISTRO="indigo" ROS_REPOSITORY_PATH=http://packages.ros.org/ros/ubuntu USE_DEB=true
+    - ROS_DISTRO="indigo" ROS_REPOSITORY_PATH=http://packages.ros.org/ros-shadow-fixed/ubuntu  USE_DEB=true
+    - ROS_DISTRO="indigo"   PRERELEASE=true
+    - ROS_DISTRO="jade"   ROS_REPOSITORY_PATH=http://packages.ros.org/ros/ubuntu  USE_DEB=true
+    - ROS_DISTRO="jade"   ROS_REPOSITORY_PATH=http://packages.ros.org/ros-shadow-fixed/ubuntu  USE_DEB=true
+    - ROS_DISTRO="kinetic"
+matrix:
+  allow_failures:
+    - env: ROS_DISTRO="jade"   ROS_REPOSITORY_PATH=http://packages.ros.org/ros/ubuntu  USE_DEB=true
+    - env: ROS_DISTRO="jade"   ROS_REPOSITORY_PATH=http://packages.ros.org/ros-shadow-fixed/ubuntu  USE_DEB=true
+    - env: ROS_DISTRO="kinetic"
 before_script:
-  - source /opt/ros/hydro/setup.bash
-  - mkdir -p ~/frontier_ws/src
-  - cd ~/frontier_ws/src
-  - catkin_init_workspace
-  - ln -s $CI_SOURCE_PATH .  
-
+  - git clone https://github.com/ros-industrial/industrial_ci.git .ci_config
 script:
-  - cd ~/frontier_ws
-  - catkin_make tests -j1 -DCATKIN_ENABLE_TESTING=ON
-  - catkin_make run_tests -j1 -DCATKIN_ENABLE_TESTING=ON
-  - catkin_make install -j1 -DCATKIN_ENABLE_TESTING=ON
+  - source .ci_config/travis.sh
+#  - source ./travis.sh  # Enable this when you have a package-local script 
