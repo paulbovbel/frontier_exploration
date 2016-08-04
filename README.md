@@ -3,7 +3,7 @@ frontier_exploration ![asdf](https://travis-ci.org/paulbovbel/frontier_explorati
 
 
 
-Implementation of frontier exploration (http://www.robotfrontier.com/papers/cira97.pdf) for ROS Hydro, extending on the existing navigation stack (costmap_2d, move_base).
+Implementation of frontier exploration (http://www.robotfrontier.com/papers/cira97.pdf) for ROS, extending on the existing navigation stack (costmap_2d, move_base).
 
 Wiki: http://wiki.ros.org/frontier_exploration
 
