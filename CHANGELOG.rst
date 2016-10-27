@@ -2,6 +2,14 @@
 Changelog for package frontier_exploration
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Update to BSD license
+* Update LICENSE
+* [Travis config] Use Ubuntu 14.04 and test ROS I+
+* fixed wrong order of footprint coordinates (was hourglass shape)
+* Contributors: Achim Krauch, Isaac I.Y. Saito, Paul Bovbel
+
 0.3.0 (2015-05-04)
 ------------------
 * adjust costmap lock to new interface
