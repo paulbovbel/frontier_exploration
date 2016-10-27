@@ -2,8 +2,8 @@
 Changelog for package frontier_exploration
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+0.3.1 (2016-10-26)
+------------------
 * Update to BSD license
 * Update LICENSE
 * [Travis config] Use Ubuntu 14.04 and test ROS I+
