@@ -123,8 +123,7 @@ namespace frontier_exploration
         int max;
         
         // TODO!
-        std::list<geometry_msgs::Point> blacklist;
-        double blacklistRadius = 0.0;
+        double blacklistRadius = 1.5;
         
         BOOST_FOREACH(Frontier frontier, frontier_list){
             //load frontier into visualization poitncloud
@@ -133,7 +132,7 @@ namespace frontier_exploration
             frontier_cloud_viz.push_back(frontier_point_viz);
 
             //check if this frontier is the nearest to robot
-            if (frontier.min_distance < selected.min_distance && !anyPointsNearby(frontier.initial, blacklist, blacklistRadius)){
+            if (frontier.min_distance < selected.min_distance && !anyPointsNearby(frontier.initial, blacklist_, blacklistRadius)){
                 selected = frontier;
                 max = frontier_cloud_viz.size()-1;
             }
@@ -312,11 +311,13 @@ namespace frontier_exploration
     }
 
     bool BoundedExploreLayer::blacklistPointService(frontier_exploration::BlacklistPoint::Request &req, frontier_exploration::BlacklistPoint::Response &res) {
+        blacklist_.push_back(req.point);
         ROS_WARN("Blacklist point added %f, %f", req.point.x, req.point.y);
         return true;
     }
 
     bool BoundedExploreLayer::clearBlacklistService(std_srvs::Empty::Request &req, std_srvs::Empty::Response &resp) {
+        blacklist_.clear();
         ROS_WARN("Blacklist cleared");
         return true;
     }

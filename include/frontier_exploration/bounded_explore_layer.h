@@ -117,7 +117,9 @@ private:
     ros::Publisher frontier_cloud_pub;
 
     bool configured_, marked_;
-
+    
+    std::list<geometry_msgs::Point> blacklist_;
+    
     std::string frontier_travel_point_;
     bool resize_to_boundary_;
     int min_frontier_size_;
