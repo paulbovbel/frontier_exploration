@@ -13,6 +13,7 @@
 #include <frontier_exploration/Frontier.h>
 #include <frontier_exploration/UpdateBoundaryPolygon.h>
 #include <frontier_exploration/GetNextFrontier.h>
+#include <frontier_exploration/BlacklistPoint.h>
 #include <frontier_exploration/frontier_search.h>
 #include <frontier_exploration/geometry_tools.h>
 
@@ -57,6 +58,8 @@ namespace frontier_exploration
 
         polygonService_ = nh_.advertiseService("update_boundary_polygon", &BoundedExploreLayer::updateBoundaryPolygonService, this);
         frontierService_ = nh_.advertiseService("get_next_frontier", &BoundedExploreLayer::getNextFrontierService, this);
+        blacklistPointService_ = nh_.advertiseService("blacklist_point", &BoundedExploreLayer::blacklistPointService, this);
+        clearBlacklistService_ = nh_.advertiseService("clear_blacklist", &BoundedExploreLayer::clearBlacklistService, this);
 
         dsrv_ = new dynamic_reconfigure::Server<costmap_2d::GenericPluginConfig>(nh_);
         dynamic_reconfigure::Server<costmap_2d::GenericPluginConfig>::CallbackType cb = boost::bind(
@@ -118,7 +121,11 @@ namespace frontier_exploration
         pcl::PointCloud<pcl::PointXYZI> frontier_cloud_viz;
         pcl::PointXYZI frontier_point_viz(50);
         int max;
-
+        
+        // TODO!
+        std::list<geometry_msgs::Point> blacklist;
+        double blacklistRadius = 0.0;
+        
         BOOST_FOREACH(Frontier frontier, frontier_list){
             //load frontier into visualization poitncloud
             frontier_point_viz.x = frontier.initial.x;
@@ -126,10 +133,15 @@ namespace frontier_exploration
             frontier_cloud_viz.push_back(frontier_point_viz);
 
             //check if this frontier is the nearest to robot
-            if (frontier.min_distance < selected.min_distance){
+            if (frontier.min_distance < selected.min_distance && !anyPointsNearby(frontier.initial, blacklist, blacklistRadius)){
                 selected = frontier;
                 max = frontier_cloud_viz.size()-1;
             }
+        }
+        
+        if (std::isinf(selected.min_distance)) {
+            ROS_DEBUG("No valid (non-blacklisted) frontiers found, exploration complete");
+            return false;
         }
 
         //color selected frontier
@@ -297,5 +309,15 @@ namespace frontier_exploration
             }
         }
         marked_ = true;
+    }
+
+    bool BoundedExploreLayer::blacklistPointService(frontier_exploration::BlacklistPoint::Request &req, frontier_exploration::BlacklistPoint::Response &res) {
+        ROS_WARN("Blacklist point added %f, %f", req.point.x, req.point.y);
+        return true;
+    }
+
+    bool BoundedExploreLayer::clearBlacklistService(std_srvs::Empty::Request &req, std_srvs::Empty::Response &resp) {
+        ROS_WARN("Blacklist cleared");
+        return true;
     }
 }

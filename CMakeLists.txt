@@ -27,6 +27,7 @@ add_service_files(
   FILES
   UpdateBoundaryPolygon.srv
   GetNextFrontier.srv
+  BlacklistPoint.srv
 )
 
 add_action_files(

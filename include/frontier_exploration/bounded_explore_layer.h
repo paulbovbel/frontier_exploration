@@ -7,9 +7,11 @@
 #include <dynamic_reconfigure/server.h>
 
 #include <geometry_msgs/Polygon.h>
+#include <std_srvs/Empty.h>
 #include <frontier_exploration/Frontier.h>
 #include <frontier_exploration/UpdateBoundaryPolygon.h>
 #include <frontier_exploration/GetNextFrontier.h>
+#include <frontier_exploration/BlacklistPoint.h>
 
 namespace frontier_exploration
 {
@@ -88,6 +90,12 @@ protected:
      */
     bool getNextFrontier(geometry_msgs::PoseStamped start_pose, geometry_msgs::PoseStamped &next_frontier);
 
+    // TODO: comment
+    bool blacklistPointService(frontier_exploration::BlacklistPoint::Request &req, frontier_exploration::BlacklistPoint::Response &res);
+
+    // TODO: comment
+    bool clearBlacklistService(std_srvs::Empty::Request &req, std_srvs::Empty::Response &resp);
+
 private:
 
     /**
@@ -101,6 +109,8 @@ private:
     dynamic_reconfigure::Server<costmap_2d::GenericPluginConfig> *dsrv_;
     ros::ServiceServer polygonService_;
     ros::ServiceServer frontierService_;
+    ros::ServiceServer blacklistPointService_;
+    ros::ServiceServer clearBlacklistService_;
     geometry_msgs::Polygon polygon_;
     tf::TransformListener tf_listener_;
 
