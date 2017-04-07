@@ -40,6 +40,7 @@ namespace frontier_exploration
 
         ros::NodeHandle nh_("~/" + name_);
         frontier_cloud_pub = nh_.advertise<sensor_msgs::PointCloud2>("frontiers",5);
+        blacklist_marker_pub_ = nh_.advertise<visualization_msgs::Marker>("blacklist", 5);
         configured_ = false;
         marked_ = false;
 
@@ -303,14 +304,50 @@ namespace frontier_exploration
     }
 
     bool BoundedExploreLayer::blacklistPointService(frontier_exploration::BlacklistPoint::Request &req, frontier_exploration::BlacklistPoint::Response &res) {
+        // Add point to blacklist
         blacklist_.push_back(req.point);
         ROS_WARN("Blacklist point added %f, %f", req.point.x, req.point.y);
+        
+        // Show point in blacklist topic
+        visualization_msgs::Marker marker;
+        marker.type = visualization_msgs::Marker::CYLINDER;
+        marker.ns = "blacklist";
+        marker.id = blacklist_.size();
+        marker.action = visualization_msgs::Marker::ADD;
+
+        marker.header.frame_id = global_frame_;
+        marker.header.stamp = ros::Time::now();
+        
+        marker.pose.position = req.point;
+        marker.pose.orientation.w = 1.0;
+        
+        // Scale is the diameter of the shape
+        marker.scale.x = 2 * blacklist_radius_;
+        marker.scale.y = 2 * blacklist_radius_;
+        // Circle
+        marker.scale.z = 0.05;
+        
+        marker.color.r = 1.0;
+        marker.color.a = 0.6;
+        
+        blacklist_marker_pub_.publish(marker);
+        
+        // All is good :)
         return true;
     }
 
     bool BoundedExploreLayer::clearBlacklistService(std_srvs::Empty::Request &req, std_srvs::Empty::Response &resp) {
+        // Clear the list
         blacklist_.clear();
         ROS_WARN("Blacklist cleared");
+        
+        // Delete all markers from visualization
+        visualization_msgs::Marker marker;
+        marker.type = visualization_msgs::Marker::CYLINDER;
+        marker.ns = "blacklist";
+        marker.action = visualization_msgs::Marker::DELETEALL;
+        
+        // All is good :)
         return true;
     }
 }

@@ -115,6 +115,7 @@ private:
     tf::TransformListener tf_listener_;
 
     ros::Publisher frontier_cloud_pub;
+    ros::Publisher blacklist_marker_pub_;
 
     bool configured_, marked_;
 
