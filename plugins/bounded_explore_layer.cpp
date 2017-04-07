@@ -5,6 +5,7 @@
 #include <costmap_2d/costmap_2d.h>
 #include <costmap_2d/footprint.h>
 #include <sensor_msgs/PointCloud2.h>
+#include <visualization_msgs/Marker.h>
 #include <pcl_ros/point_cloud.h>
 #include <pcl/point_cloud.h>
 #include <pcl/point_types.h>
@@ -41,6 +42,10 @@ namespace frontier_exploration
         frontier_cloud_pub = nh_.advertise<sensor_msgs::PointCloud2>("frontiers",5);
         configured_ = false;
         marked_ = false;
+
+        // TODO!
+        blacklist_radius_ = 1.5;
+        global_frame_ = "map";
 
         bool explore_clear_space;
         nh_.param("explore_clear_space", explore_clear_space, true);
@@ -104,7 +109,7 @@ namespace frontier_exploration
         }
 
         //initialize frontier search implementation
-        FrontierSearch frontierSearch(*(layered_costmap_->getCostmap()), min_frontier_size_);
+        FrontierSearch frontierSearch(*(layered_costmap_->getCostmap()), min_frontier_size_, frontier_travel_point_);
         //get list of frontiers from search implementation
         std::list<Frontier> frontier_list = frontierSearch.searchFrom(start_pose.pose.position);
 
@@ -121,23 +126,20 @@ namespace frontier_exploration
         pcl::PointCloud<pcl::PointXYZI> frontier_cloud_viz;
         pcl::PointXYZI frontier_point_viz(50);
         int max;
-        
-        // TODO!
-        double blacklistRadius = 1.5;
-        
+
         BOOST_FOREACH(Frontier frontier, frontier_list){
             //load frontier into visualization poitncloud
-            frontier_point_viz.x = frontier.initial.x;
-            frontier_point_viz.y = frontier.initial.y;
+            frontier_point_viz.x = frontier.travel_point.x;
+            frontier_point_viz.y = frontier.travel_point.y;
             frontier_cloud_viz.push_back(frontier_point_viz);
 
             //check if this frontier is the nearest to robot
-            if (frontier.min_distance < selected.min_distance && !anyPointsNearby(frontier.initial, blacklist_, blacklistRadius)){
+            if (frontier.min_distance < selected.min_distance && !anyPointsNearby(frontier.travel_point, blacklist_, blacklist_radius_)){
                 selected = frontier;
                 max = frontier_cloud_viz.size()-1;
             }
         }
-        
+
         if (std::isinf(selected.min_distance)) {
             ROS_DEBUG("No valid (non-blacklisted) frontiers found, exploration complete");
             return false;
@@ -158,17 +160,7 @@ namespace frontier_exploration
         next_frontier.header.stamp = ros::Time::now();
 
         //
-        if(frontier_travel_point_ == "closest"){
-            next_frontier.pose.position = selected.initial;
-        }else if(frontier_travel_point_ == "middle"){
-            next_frontier.pose.position = selected.middle;
-        }else if(frontier_travel_point_ == "centroid"){
-            next_frontier.pose.position = selected.centroid;
-        }else{
-            ROS_ERROR("Invalid 'frontier_travel_point' parameter, falling back to 'closest'");
-            next_frontier.pose.position = selected.initial;
-        }
-
+        next_frontier.pose.position = selected.travel_point;
         next_frontier.pose.orientation = tf::createQuaternionMsgFromYaw( yawOfVector(start_pose.pose.position, next_frontier.pose.position) );
         return true;
 

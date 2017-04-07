@@ -14,8 +14,8 @@ using costmap_2d::LETHAL_OBSTACLE;
 using costmap_2d::NO_INFORMATION;
 using costmap_2d::FREE_SPACE;
 
-FrontierSearch::FrontierSearch(costmap_2d::Costmap2D &costmap, int min_frontier_size) :
-    costmap_(costmap), min_frontier_size_(min_frontier_size) { }
+FrontierSearch::FrontierSearch(costmap_2d::Costmap2D &costmap, int min_frontier_size, std::string &travel_point) :
+    costmap_(costmap), min_frontier_size_(min_frontier_size), travel_point_(travel_point) { }
 
 std::list<Frontier> FrontierSearch::searchFrom(geometry_msgs::Point position){
 
@@ -81,15 +81,14 @@ Frontier FrontierSearch::buildNewFrontier(unsigned int initial_cell, unsigned in
 
     //initialize frontier structure
     Frontier output;
-    output.centroid.x = 0;
-    output.centroid.y = 0;
+    geometry_msgs::Point centroid, middle;
     output.size = 1;
     output.min_distance = std::numeric_limits<double>::infinity();
 
     //record initial contact point for frontier
     unsigned int ix, iy;
     costmap_.indexToCells(initial_cell,ix,iy);
-    costmap_.mapToWorld(ix,iy,output.initial.x,output.initial.y);
+    costmap_.mapToWorld(ix,iy,output.travel_point.x,output.travel_point.y);
 
     //push initial gridcell onto queue
     std::queue<unsigned int> bfs;
@@ -121,15 +120,15 @@ Frontier FrontierSearch::buildNewFrontier(unsigned int initial_cell, unsigned in
                 output.size++;
 
                 //update centroid of frontier
-                output.centroid.x += wx;
-                output.centroid.y += wy;
+                centroid.x += wx;
+                centroid.y += wy;
 
                 //determine frontier's distance from robot, going by closest gridcell to robot
                 double distance = sqrt(pow((double(reference_x)-double(wx)),2.0) + pow((double(reference_y)-double(wy)),2.0));
                 if(distance < output.min_distance){
                     output.min_distance = distance;
-                    output.middle.x = wx;
-                    output.middle.y = wy;
+                    middle.x = wx;
+                    middle.y = wy;
                 }
 
                 //add to queue for breadth first search
@@ -139,8 +138,20 @@ Frontier FrontierSearch::buildNewFrontier(unsigned int initial_cell, unsigned in
     }
 
     //average out frontier centroid
-    output.centroid.x /= output.size;
-    output.centroid.y /= output.size;
+    centroid.x /= output.size;
+    centroid.y /= output.size;
+
+    if(travel_point_ == "closest"){
+        // point already set
+    }else if(travel_point_ == "middle"){
+        output.travel_point = middle;
+    }else if(travel_point_ == "centroid"){
+        output.travel_point = centroid;
+    }else{
+        ROS_ERROR("Invalid 'frontier_travel_point' parameter, falling back to 'closest'");
+        // point already set
+    }
+
     return output;
 }
 
