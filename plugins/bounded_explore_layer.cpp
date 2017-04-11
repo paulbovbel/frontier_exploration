@@ -341,7 +341,8 @@ namespace frontier_exploration
         visualization_msgs::Marker marker;
         marker.type = visualization_msgs::Marker::CYLINDER;
         marker.ns = "blacklist";
-        marker.action = visualization_msgs::Marker::DELETEALL;
+        // The constant does not exist in ROS Indigo, although functionality is implemented. We use our own.
+        marker.action = DELETEALL;
 
         // All is good :)
         return true;

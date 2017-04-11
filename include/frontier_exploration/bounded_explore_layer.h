@@ -56,6 +56,11 @@ public:
      * @brief Reset exploration progress
      */
     virtual void reset();
+    
+    /**
+     * @brief Future define for visualization_msgs::Marker::DELETEALL. Constant is not defined in ROS Indigo, but functionality is implemented
+     */
+    static const int DELETEALL = 3;
 
 protected:
 
