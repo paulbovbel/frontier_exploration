@@ -90,10 +90,20 @@ protected:
      */
     bool getNextFrontier(geometry_msgs::PoseStamped start_pose, geometry_msgs::PoseStamped &next_frontier);
 
-    // TODO: comment
+    /**
+     * @brief ROS Service wrapper for adding a point to the frontier blacklist
+     * @param req Service request
+     * @param res Service response
+     * @return Always true
+     */
     bool blacklistPointService(frontier_exploration::BlacklistPoint::Request &req, frontier_exploration::BlacklistPoint::Response &res);
 
-    // TODO: comment
+    /**
+     * @brief ROS Service wrapper for clearing the frontier blacklist
+     * @param req Service request
+     * @param res Service response
+     * @return Always true
+     */
     bool clearBlacklistService(std_srvs::Empty::Request &req, std_srvs::Empty::Response &resp);
 
 private:

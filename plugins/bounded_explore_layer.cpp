@@ -44,10 +44,6 @@ namespace frontier_exploration
         configured_ = false;
         marked_ = false;
 
-        // TODO!
-        blacklist_radius_ = 1.5;
-        global_frame_ = "map";
-
         bool explore_clear_space;
         nh_.param("explore_clear_space", explore_clear_space, true);
         if(explore_clear_space){
@@ -307,7 +303,7 @@ namespace frontier_exploration
         // Add point to blacklist
         blacklist_.push_back(req.point);
         ROS_WARN("Blacklist point added %f, %f", req.point.x, req.point.y);
-        
+
         // Show point in blacklist topic
         visualization_msgs::Marker marker;
         marker.type = visualization_msgs::Marker::CYLINDER;
@@ -317,21 +313,21 @@ namespace frontier_exploration
 
         marker.header.frame_id = global_frame_;
         marker.header.stamp = ros::Time::now();
-        
+
         marker.pose.position = req.point;
         marker.pose.orientation.w = 1.0;
-        
+
         // Scale is the diameter of the shape
         marker.scale.x = 2 * blacklist_radius_;
         marker.scale.y = 2 * blacklist_radius_;
         // Circle
         marker.scale.z = 0.05;
-        
+
         marker.color.r = 1.0;
         marker.color.a = 0.6;
-        
+
         blacklist_marker_pub_.publish(marker);
-        
+
         // All is good :)
         return true;
     }
@@ -340,13 +336,13 @@ namespace frontier_exploration
         // Clear the list
         blacklist_.clear();
         ROS_WARN("Blacklist cleared");
-        
+
         // Delete all markers from visualization
         visualization_msgs::Marker marker;
         marker.type = visualization_msgs::Marker::CYLINDER;
         marker.ns = "blacklist";
         marker.action = visualization_msgs::Marker::DELETEALL;
-        
+
         // All is good :)
         return true;
     }
