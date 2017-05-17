@@ -110,7 +110,7 @@ private:
 
     std::string frontier_travel_point_;
     bool resize_to_boundary_;
-
+    int min_frontier_size_;
 };
 
 }

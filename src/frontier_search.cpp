@@ -14,7 +14,8 @@ using costmap_2d::LETHAL_OBSTACLE;
 using costmap_2d::NO_INFORMATION;
 using costmap_2d::FREE_SPACE;
 
-FrontierSearch::FrontierSearch(costmap_2d::Costmap2D &costmap) : costmap_(costmap) { }
+FrontierSearch::FrontierSearch(costmap_2d::Costmap2D &costmap, int min_frontier_size) :
+    costmap_(costmap), min_frontier_size_(min_frontier_size) { }
 
 std::list<Frontier> FrontierSearch::searchFrom(geometry_msgs::Point position){
 
@@ -65,7 +66,7 @@ std::list<Frontier> FrontierSearch::searchFrom(geometry_msgs::Point position){
             }else if(isNewFrontierCell(nbr, frontier_flag)){
                 frontier_flag[nbr] = true;
                 Frontier new_frontier = buildNewFrontier(nbr, pos, frontier_flag);
-                if(new_frontier.size > 1){
+                if(new_frontier.size > min_frontier_size_){
                     frontier_list.push_back(new_frontier);
                 }
             }

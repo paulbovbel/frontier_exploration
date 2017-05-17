@@ -53,6 +53,7 @@ namespace frontier_exploration
 
         nh_.param<bool>("resize_to_boundary", resize_to_boundary_, true);
         nh_.param<std::string>("frontier_travel_point", frontier_travel_point_, "closest");
+        nh_.param<int>("min_frontier_size", min_frontier_size_, 1);
 
         polygonService_ = nh_.advertiseService("update_boundary_polygon", &BoundedExploreLayer::updateBoundaryPolygonService, this);
         frontierService_ = nh_.advertiseService("get_next_frontier", &BoundedExploreLayer::getNextFrontierService, this);
@@ -100,7 +101,7 @@ namespace frontier_exploration
         }
 
         //initialize frontier search implementation
-        FrontierSearch frontierSearch(*(layered_costmap_->getCostmap()));
+        FrontierSearch frontierSearch(*(layered_costmap_->getCostmap()), min_frontier_size_);
         //get list of frontiers from search implementation
         std::list<Frontier> frontier_list = frontierSearch.searchFrom(start_pose.pose.position);
 
