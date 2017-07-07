@@ -5,6 +5,7 @@
 #include <costmap_2d/costmap_2d.h>
 #include <costmap_2d/footprint.h>
 #include <sensor_msgs/PointCloud2.h>
+#include <visualization_msgs/Marker.h>
 #include <pcl_ros/point_cloud.h>
 #include <pcl/point_cloud.h>
 #include <pcl/point_types.h>
@@ -13,6 +14,7 @@
 #include <frontier_exploration/Frontier.h>
 #include <frontier_exploration/UpdateBoundaryPolygon.h>
 #include <frontier_exploration/GetNextFrontier.h>
+#include <frontier_exploration/BlacklistPoint.h>
 #include <frontier_exploration/frontier_search.h>
 #include <frontier_exploration/geometry_tools.h>
 
@@ -38,6 +40,7 @@ namespace frontier_exploration
 
         ros::NodeHandle nh_("~/" + name_);
         frontier_cloud_pub = nh_.advertise<sensor_msgs::PointCloud2>("frontiers",5);
+        blacklist_marker_pub_ = nh_.advertise<visualization_msgs::Marker>("blacklist", 5);
         configured_ = false;
         marked_ = false;
 
@@ -57,6 +60,8 @@ namespace frontier_exploration
 
         polygonService_ = nh_.advertiseService("update_boundary_polygon", &BoundedExploreLayer::updateBoundaryPolygonService, this);
         frontierService_ = nh_.advertiseService("get_next_frontier", &BoundedExploreLayer::getNextFrontierService, this);
+        blacklistPointService_ = nh_.advertiseService("blacklist_point", &BoundedExploreLayer::blacklistPointService, this);
+        clearBlacklistService_ = nh_.advertiseService("clear_blacklist", &BoundedExploreLayer::clearBlacklistService, this);
 
         dsrv_ = new dynamic_reconfigure::Server<costmap_2d::GenericPluginConfig>(nh_);
         dynamic_reconfigure::Server<costmap_2d::GenericPluginConfig>::CallbackType cb = boost::bind(
@@ -101,7 +106,7 @@ namespace frontier_exploration
         }
 
         //initialize frontier search implementation
-        FrontierSearch frontierSearch(*(layered_costmap_->getCostmap()), min_frontier_size_);
+        FrontierSearch frontierSearch(*(layered_costmap_->getCostmap()), min_frontier_size_, frontier_travel_point_);
         //get list of frontiers from search implementation
         std::list<Frontier> frontier_list = frontierSearch.searchFrom(start_pose.pose.position);
 
@@ -121,15 +126,20 @@ namespace frontier_exploration
 
         BOOST_FOREACH(Frontier frontier, frontier_list){
             //load frontier into visualization poitncloud
-            frontier_point_viz.x = frontier.initial.x;
-            frontier_point_viz.y = frontier.initial.y;
+            frontier_point_viz.x = frontier.travel_point.x;
+            frontier_point_viz.y = frontier.travel_point.y;
             frontier_cloud_viz.push_back(frontier_point_viz);
 
             //check if this frontier is the nearest to robot
-            if (frontier.min_distance < selected.min_distance){
+            if (frontier.min_distance < selected.min_distance && !anyPointsNearby(frontier.travel_point, blacklist_, blacklist_radius_)){
                 selected = frontier;
                 max = frontier_cloud_viz.size()-1;
             }
+        }
+
+        if (std::isinf(selected.min_distance)) {
+            ROS_DEBUG("No valid (non-blacklisted) frontiers found, exploration complete");
+            return false;
         }
 
         //color selected frontier
@@ -147,17 +157,7 @@ namespace frontier_exploration
         next_frontier.header.stamp = ros::Time::now();
 
         //
-        if(frontier_travel_point_ == "closest"){
-            next_frontier.pose.position = selected.initial;
-        }else if(frontier_travel_point_ == "middle"){
-            next_frontier.pose.position = selected.middle;
-        }else if(frontier_travel_point_ == "centroid"){
-            next_frontier.pose.position = selected.centroid;
-        }else{
-            ROS_ERROR("Invalid 'frontier_travel_point' parameter, falling back to 'closest'");
-            next_frontier.pose.position = selected.initial;
-        }
-
+        next_frontier.pose.position = selected.travel_point;
         next_frontier.pose.orientation = tf::createQuaternionMsgFromYaw( yawOfVector(start_pose.pose.position, next_frontier.pose.position) );
         return true;
 
@@ -297,5 +297,54 @@ namespace frontier_exploration
             }
         }
         marked_ = true;
+    }
+
+    bool BoundedExploreLayer::blacklistPointService(frontier_exploration::BlacklistPoint::Request &req, frontier_exploration::BlacklistPoint::Response &res) {
+        // Add point to blacklist
+        blacklist_.push_back(req.point);
+        ROS_WARN("Blacklist point added %f, %f", req.point.x, req.point.y);
+
+        // Show point in blacklist topic
+        visualization_msgs::Marker marker;
+        marker.type = visualization_msgs::Marker::CYLINDER;
+        marker.ns = "blacklist";
+        marker.id = blacklist_.size();
+        marker.action = visualization_msgs::Marker::ADD;
+
+        marker.header.frame_id = global_frame_;
+        marker.header.stamp = ros::Time::now();
+
+        marker.pose.position = req.point;
+        marker.pose.orientation.w = 1.0;
+
+        // Scale is the diameter of the shape
+        marker.scale.x = 2 * blacklist_radius_;
+        marker.scale.y = 2 * blacklist_radius_;
+        // Circle
+        marker.scale.z = 0.05;
+
+        marker.color.r = 1.0;
+        marker.color.a = 0.6;
+
+        blacklist_marker_pub_.publish(marker);
+
+        // All is good :)
+        return true;
+    }
+
+    bool BoundedExploreLayer::clearBlacklistService(std_srvs::Empty::Request &req, std_srvs::Empty::Response &resp) {
+        // Clear the list
+        blacklist_.clear();
+        ROS_WARN("Blacklist cleared");
+
+        // Delete all markers from visualization
+        visualization_msgs::Marker marker;
+        marker.type = visualization_msgs::Marker::CYLINDER;
+        marker.ns = "blacklist";
+        // The constant does not exist in ROS Indigo, although functionality is implemented. We use our own.
+        marker.action = DELETEALL;
+
+        // All is good :)
+        return true;
     }
 }

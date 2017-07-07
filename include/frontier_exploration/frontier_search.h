@@ -17,8 +17,9 @@ public:
      * @brief Constructor for search task
      * @param costmap Reference to costmap data to search.
      * @param min_frontier_size The minimum size to accept a frontier
+     * @param travel_point The requested travel point (closest|middle|centroid)
      */
-    FrontierSearch(costmap_2d::Costmap2D& costmap, int min_frontier_size);
+    FrontierSearch(costmap_2d::Costmap2D& costmap, int min_frontier_size, std::string &travel_point);
 
     /**
      * @brief Runs search implementation, outward from the start position
@@ -52,6 +53,7 @@ private:
     unsigned char* map_;
     unsigned int size_x_ , size_y_;
     int min_frontier_size_;
+    std::string travel_point_;
 
 };
 

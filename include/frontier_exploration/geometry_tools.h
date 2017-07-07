@@ -1,6 +1,8 @@
 #ifndef GEOMETRY_TOOLS_H_
 #define GEOMETRY_TOOLS_H_
 
+#include <boost/foreach.hpp>
+
 #include <geometry_msgs/Polygon.h>
 #include <geometry_msgs/Point.h>
 #include <costmap_2d/costmap_2d.h>
@@ -46,6 +48,23 @@ namespace frontier_exploration{
   template<typename T, typename S>
   bool pointsNearby(const T &one, const S &two, const double &proximity){
       return pointsDistance(one, two) <= proximity;
+  }
+  
+  /**
+  * @brief Evaluate whether a point is approximately adjacent, within a specified proximity distance, to any point in a list.
+  * @param one Point one
+  * @param list List<Point> list
+  * @param proximity Proximity distance
+  * @return True if approximately adjacent, false otherwise
+  */
+  template<typename T, typename S>
+  bool anyPointsNearby(const T &one, const std::list<S> &list, const double &proximity){
+      BOOST_FOREACH(S two, list){
+          if (pointsNearby(one, two, proximity)) {
+              return true;
+          }
+      }
+      return false;
   }
 
 /**

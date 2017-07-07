@@ -6,9 +6,11 @@
 
 #include <geometry_msgs/PolygonStamped.h>
 
+#include <std_srvs/Empty.h>
 #include <frontier_exploration/ExploreTaskAction.h>
 #include <frontier_exploration/GetNextFrontier.h>
 #include <frontier_exploration/UpdateBoundaryPolygon.h>
+#include <frontier_exploration/BlacklistPoint.h>
 
 #include <tf/transform_listener.h>
 
@@ -241,10 +243,32 @@ private:
     void doneMovingCb(const actionlib::SimpleClientGoalState& state, const move_base_msgs::MoveBaseResultConstPtr& result){
 
         if (state == actionlib::SimpleClientGoalState::ABORTED){
-            ROS_ERROR("Failed to move");
-            as_.setAborted();
+            ROS_ERROR("Failed to move. Blacklisting point.");
+            moving_ = false;
+            
+            // Find the blacklist service
+            ros::ServiceClient blacklistPointService = private_nh_.serviceClient<BlacklistPoint>("explore_costmap/explore_boundary/blacklist_point");
+            // Create the service request
+            BlacklistPoint srv;
+            srv.request.point = feedback_.next_frontier.pose.position;
+            
+            // Call the service
+            if (!blacklistPointService.call(srv)) {
+                ROS_ERROR("Failed to blacklist point.");
+            }
         }else if(state == actionlib::SimpleClientGoalState::SUCCEEDED){
             moving_ = false;
+            
+            // Find the clear blacklist service
+            ros::ServiceClient clearBlacklistService = private_nh_.serviceClient<std_srvs::Empty>("explore_costmap/explore_boundary/clear_blacklist");
+            
+            // No argument
+            std_srvs::Empty srv;
+            
+            // Call the service
+            if (!clearBlacklistService.call(srv)) {
+                ROS_ERROR("Failed to clear blacklist.");
+            }
         }
 
     }

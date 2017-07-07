@@ -7,9 +7,11 @@
 #include <dynamic_reconfigure/server.h>
 
 #include <geometry_msgs/Polygon.h>
+#include <std_srvs/Empty.h>
 #include <frontier_exploration/Frontier.h>
 #include <frontier_exploration/UpdateBoundaryPolygon.h>
 #include <frontier_exploration/GetNextFrontier.h>
+#include <frontier_exploration/BlacklistPoint.h>
 
 namespace frontier_exploration
 {
@@ -54,6 +56,11 @@ public:
      * @brief Reset exploration progress
      */
     virtual void reset();
+    
+    /**
+     * @brief Future define for visualization_msgs::Marker::DELETEALL. Constant is not defined in ROS Indigo, but functionality is implemented
+     */
+    static const int DELETEALL = 3;
 
 protected:
 
@@ -88,6 +95,22 @@ protected:
      */
     bool getNextFrontier(geometry_msgs::PoseStamped start_pose, geometry_msgs::PoseStamped &next_frontier);
 
+    /**
+     * @brief ROS Service wrapper for adding a point to the frontier blacklist
+     * @param req Service request
+     * @param res Service response
+     * @return Always true
+     */
+    bool blacklistPointService(frontier_exploration::BlacklistPoint::Request &req, frontier_exploration::BlacklistPoint::Response &res);
+
+    /**
+     * @brief ROS Service wrapper for clearing the frontier blacklist
+     * @param req Service request
+     * @param res Service response
+     * @return Always true
+     */
+    bool clearBlacklistService(std_srvs::Empty::Request &req, std_srvs::Empty::Response &resp);
+
 private:
 
     /**
@@ -101,16 +124,23 @@ private:
     dynamic_reconfigure::Server<costmap_2d::GenericPluginConfig> *dsrv_;
     ros::ServiceServer polygonService_;
     ros::ServiceServer frontierService_;
+    ros::ServiceServer blacklistPointService_;
+    ros::ServiceServer clearBlacklistService_;
     geometry_msgs::Polygon polygon_;
     tf::TransformListener tf_listener_;
 
     ros::Publisher frontier_cloud_pub;
+    ros::Publisher blacklist_marker_pub_;
 
     bool configured_, marked_;
 
+    std::list<geometry_msgs::Point> blacklist_;
+
+    std::string global_frame_;
     std::string frontier_travel_point_;
     bool resize_to_boundary_;
     int min_frontier_size_;
+    double blacklist_radius_;
 };
 
 }
