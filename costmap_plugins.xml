@@ -1,7 +1,7 @@
 <class_libraries>
   <library path="lib/libexplore_costmap">
     <class type="frontier_exploration::BoundedExploreLayer" base_class_type="costmap_2d::Layer">
-      <description>Demo Layer that marks all points that were ever one meter in front of the robot</description>
+      <description>Costmap layer for conducting frontier exploration in a bounded area</description>
     </class>
   </library>
 </class_libraries>
