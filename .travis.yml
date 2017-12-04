@@ -16,19 +16,14 @@ env:
     - ROS_PARALLEL_JOBS=-j1
     - ROS_PARALLEL_TEST_JOBS=-j1
   matrix:
-    - ROS_DISTRO="indigo" ROS_REPOSITORY_PATH=http://packages.ros.org/ros/ubuntu USE_DEB=true
-    - ROS_DISTRO="indigo" ROS_REPOSITORY_PATH=http://packages.ros.org/ros-shadow-fixed/ubuntu  USE_DEB=true
-    - ROS_DISTRO="indigo"   PRERELEASE=true
-    - ROS_DISTRO="jade"   ROS_REPOSITORY_PATH=http://packages.ros.org/ros/ubuntu  USE_DEB=true
-    - ROS_DISTRO="jade"   ROS_REPOSITORY_PATH=http://packages.ros.org/ros-shadow-fixed/ubuntu  USE_DEB=true
-    - ROS_DISTRO="kinetic"
+    - ROS_DISTRO="lunar"   ROS_REPOSITORY_PATH=http://packages.ros.org/ros/ubuntu  USE_DEB=true
+    - ROS_DISTRO="lunar"   ROS_REPOSITORY_PATH=http://packages.ros.org/ros-shadow-fixed/ubuntu  USE_DEB=true
+    - ROS_DISTRO="lunar"  PRERELEASE=true
 matrix:
   allow_failures:
-    - env: ROS_DISTRO="jade"   ROS_REPOSITORY_PATH=http://packages.ros.org/ros/ubuntu  USE_DEB=true
-    - env: ROS_DISTRO="jade"   ROS_REPOSITORY_PATH=http://packages.ros.org/ros-shadow-fixed/ubuntu  USE_DEB=true
-    - env: ROS_DISTRO="kinetic"
+    - env: ROS_DISTRO="lunar"  PRERELEASE=true
 before_script:
   - git clone https://github.com/ros-industrial/industrial_ci.git .ci_config
 script:
-  - source .ci_config/travis.sh
+  - .ci_config/travis.sh
 #  - source ./travis.sh  # Enable this when you have a package-local script 
