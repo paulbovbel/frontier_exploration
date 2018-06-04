@@ -126,7 +126,7 @@ private:
 
             //check if robot is not within exploration boundary and needs to return to center of search area
             if(goal->explore_boundary.polygon.points.size() > 0 && !pointInPolygon(eval_pose.pose.position,goal->explore_boundary.polygon)){
-                
+
                 //check if robot has explored at least one frontier, and promote debug message to warning
                 if(success_){
                     ROS_WARN("Robot left exploration boundary, returning to center");
@@ -245,26 +245,26 @@ private:
         if (state == actionlib::SimpleClientGoalState::ABORTED){
             ROS_ERROR("Failed to move. Blacklisting point.");
             moving_ = false;
-            
+
             // Find the blacklist service
             ros::ServiceClient blacklistPointService = private_nh_.serviceClient<BlacklistPoint>("explore_costmap/explore_boundary/blacklist_point");
             // Create the service request
             BlacklistPoint srv;
             srv.request.point = feedback_.next_frontier.pose.position;
-            
+
             // Call the service
             if (!blacklistPointService.call(srv)) {
                 ROS_ERROR("Failed to blacklist point.");
             }
         }else if(state == actionlib::SimpleClientGoalState::SUCCEEDED){
             moving_ = false;
-            
+
             // Find the clear blacklist service
             ros::ServiceClient clearBlacklistService = private_nh_.serviceClient<std_srvs::Empty>("explore_costmap/explore_boundary/clear_blacklist");
-            
+
             // No argument
             std_srvs::Empty srv;
-            
+
             // Call the service
             if (!clearBlacklistService.call(srv)) {
                 ROS_ERROR("Failed to clear blacklist.");

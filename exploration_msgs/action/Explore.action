@@ -1,0 +1,19 @@
+# Name of plugin to use for exploration task
+string strategy_plugin
+
+# Boundary for exploration task
+geometry_msgs/PolygonStamped boundary
+
+# Starting point for exploration task, inside the boundary
+geometry_msgs/PointStamped start_point
+
+# TODO(pbovbel) do we want 'flexible parameters' using json_transport here?
+
+---
+---
+
+# Current movement goal for exploration
+geometry_msgs/PoseStamped current_goal
+
+# Current robot pose
+geometry_msgs/PoseStamped robot_pose
