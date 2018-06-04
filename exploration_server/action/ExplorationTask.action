@@ -1,0 +1,10 @@
+#Position the robot should move to
+geometry_msgs/PoseStamped target_position
+---
+#The result of the attempt to move to target_position
+bool success
+---
+#Current position it is moving to
+geometry_msgs/PoseStamped next_position
+#Current position of robot
+geometry_msgs/PoseStamped base_position
