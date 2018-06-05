@@ -1,6 +1,8 @@
 cmake_minimum_required(VERSION 2.8.3)
 project(frontier_exploration)
 
+set_directory_properties(PROPERTIES COMPILE_OPTIONS "-std=c++14")
+
 find_package(catkin REQUIRED COMPONENTS
   costmap_2d
   dynamic_reconfigure
