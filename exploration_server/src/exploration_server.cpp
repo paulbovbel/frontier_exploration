@@ -1,8 +1,10 @@
 #include "exploration_server/exploration_server.h"
+#include "exploration_server/planner_base.h"
 
 #include <ros/ros.h>
 #include <actionlib/server/simple_action_server.h>
 #include <actionlib/client/simple_action_client.h>
+#include <pluginlib/class_loader.h>
 
 #include <move_base_msgs/MoveBaseAction.h>
 
@@ -22,7 +24,20 @@ ExplorationServer::ExplorationServer(ros::NodeHandle nh, ros::NodeHandle private
 
 }
 
-void ExplorationServer::goalCB(const exploration_server::ExplorationTaskGoalConstPtr &goal){
+void ExplorationServer::goalCB(GoalHandle gh){
+
+  // set as active goal GoalHandle
+  gh.setAccepted();
+
+  // initialize exploration planner plugin
+  pluginlib::ClassLoader<planner_base::RegularPlanner> planner_loader("exploration_server", "planner_base::RegularPlanner");
+  try{
+    boost::shared_ptr<planner_base::RegularPlanner> planner = planner_loader.createInstance(gh.getGoal()->strategy_plugin);
+    planner->initialize();
+  }
+  catch(pluginlib::PluginlibException& ex){
+    ROS_ERROR("The plugin failed to load for some reason. Error: %s", ex.what());
+  }
   //   1. preempt active goal handle, if any
   //   2. set as active goal handle
   //   3. initialize exploration planner plugin
@@ -40,7 +55,7 @@ void ExplorationServer::moveBaseResultCb(const actionlib::SimpleClientGoalState&
   //     c) fail exploration?
 }
 
-void ExplorationServer::cancelGoalCb(const exploration_server::ExplorationTaskGoalConstPtr &goal){
+void ExplorationServer::cancelGoalCb(GoalHandle gh){
   //   1. if active goal handle, cancel
 }
 

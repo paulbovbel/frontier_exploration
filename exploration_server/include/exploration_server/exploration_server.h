@@ -16,8 +16,13 @@ private:
   ros::NodeHandle private_nh_;
   tf::TransformListener tf_listener_;
 
-  actionlib::ActionServer<exploration_msgs::ExploreAction> explore_action_server_;
+  typedef actionlib::ActionServer<exploration_msgs::ExploreAction> explore_action_server_;
+  typedef explore_action_server_::GoalHandle GoalHandle;
   // TODO move_base_client
+
+  void goalCB(GoalHandle gh);
+  void moveBaseResultCb(const actionlib::SimpleClientGoalState& state, const move_base_msgs::MoveBaseResultConstPtr& result);
+  void cancelGoalCb(GoalHandle gh);
 
   boost::shared_ptr<costmap_2d::Costmap2DROS> costmap_ros_;
 
