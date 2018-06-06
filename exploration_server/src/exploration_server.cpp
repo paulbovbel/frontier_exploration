@@ -1,10 +1,14 @@
 #include "exploration_server/exploration_server.h"
 #include "exploration_server/planner_base.h"
+#include "exploration_msgs/SetPolygon.h"
+#include "exploration_msgs/GetNextGoal.h"
 
 #include <ros/ros.h>
 #include <actionlib/server/simple_action_server.h>
 #include <actionlib/client/simple_action_client.h>
 #include <pluginlib/class_loader.h>
+
+#include <tf/transform_listener.h>
 
 #include <move_base_msgs/MoveBaseAction.h>
 
@@ -38,11 +42,35 @@ void ExplorationServer::goalCB(GoalHandle gh){
   catch(pluginlib::PluginlibException& ex){
     ROS_ERROR("The plugin failed to load for some reason. Error: %s", ex.what());
   }
+
+  // update boundary polygon on costmap, if necessary
+  ros::ServiceClient polygon_client = private_nh_.serviceClient<exploration_msgs::SetPolygon>("set_polygon");
+  exploration_msgs::SetPolygon polygon_service;
+  polygon_service.request.polygon = gh.getGoal()->boundary;
+  if(polygon_client.call(polygon_service)){
+    ROS_INFO("Updating polygon");
+  }
+  else{
+    ROS_ERROR("Failed to call update polygon service.");
+  }
+
+  // request next goal from planner plugin
+  ros::ServiceClient goal_client = private_nh_.serviceClient<exploration_msgs::GetNextGoal>("get_goal");
+  exploration_msgs::GetNextGoal goal_service;
+  tf::Stamped<tf::Pose> robot_pose;
+  costmap_ros_->getRobotPose(robot_pose);
+  goal_service.request.start_pose = robot_pose;
+  if(goal_client.call(goal_service)){
+    ROS_INFO("Updating polygon");
+  }
+  else{
+    ROS_ERROR("Failed to call update polygon service.");
+  }
   //   1. preempt active goal handle, if any
   //   2. set as active goal handle
   //   3. initialize exploration planner plugin
   //   4. update boundary polygon on costmap, if necessary
-  //   5. request next goal from planner pluigin
+  //   5. request next goal from planner plugin
   //   6. send goal to move_base
 }
 

@@ -90,7 +90,7 @@ private:
      * @param point Received point from rviz
      */
     void pointCb(const geometry_msgs::PointStampedConstPtr& point){
-      
+
         double average_distance = polygonPerimeter(input_.polygon) / input_.polygon.points.size();
 
         if(waiting_for_center_){
@@ -156,7 +156,7 @@ public:
         point_viz_pub_ = nh_.advertise<visualization_msgs::Marker>("exploration_polygon_marker", 10);
         point_viz_timer_ = nh_.createWallTimer(ros::WallDuration(0.1), boost::bind(&FrontierExplorationClient::vizPubCb, this));
         ROS_INFO("Please use the 'Point' tool in Rviz to select an exporation boundary.");
-    }    
+    }
 
 };
 

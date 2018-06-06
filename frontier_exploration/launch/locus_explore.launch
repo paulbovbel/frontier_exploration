@@ -8,6 +8,12 @@
         <param name="goal_aliasing" value="2.0"/>
 
         <rosparam file="$(find locus_autonomy)/config/costmap_common_params.yaml" command="load" ns="explore_costmap" />
+        <rosparam file="$(find locus_autonomy)/config/global_costmap_params.yaml" command="load" ns="explore_costmap" />
+        <param name="local_costmap/global_frame" value="p3_001/odom"/>
+        <param name="local_costmap/robot_base_frame" value="p3_001/base_link"/>
+        <param name="explore_costmap/global_frame" value="p3_001/odom"/>
+        <param name="explore_costmap/robot_base_frame" value="p3_001/base_link"/>
+        <param name="robot_name" value="p3_001"/>
 
     </node>
 
