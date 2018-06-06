@@ -67,7 +67,9 @@ void ExplorationServer::goalCB(GoalHandle gh){
     ROS_INFO("requesting a new goal from planner plugin");
     // send the goal to the move_base client
     feedback_.current_goal = goal_service.response.next_goal;
+    boost::unique_lock<boost::mutex> lock(move_client_lock_);
     move_client_.sendGoal(goal_service.response.next_goal, boost::bind(&ExplorationServer::moveBaseResultCb, this, _1, _2),0,0);
+    lock.unlock();
     retry_ = 5;
   }
   else{
@@ -125,6 +127,10 @@ void ExplorationServer::moveBaseResultCb(const actionlib::SimpleClientGoalState&
 }
 
 void ExplorationServer::cancelGoalCb(GoalHandle gh){
+    boost::unique_lock<boost::mutex> lock(move_client_lock_);
+    move_client_.cancelGoalsAtAndBeforeTime(ros::Time::now());
+    lock.unlock();
+    ROS_WARN("Current exploration task cancelled");
     gh.setCancelled();
 }
 
