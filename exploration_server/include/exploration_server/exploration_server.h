@@ -1,4 +1,5 @@
 #include <actionlib/server/simple_action_server.h>
+#include <actionlib/client/simple_action_client.h>
 #include <exploration_msgs/ExploreAction.h>
 #include <costmap_2d/costmap_2d_ros.h>
 
@@ -19,6 +20,10 @@ private:
   typedef actionlib::ActionServer<exploration_msgs::ExploreAction> explore_action_server_;
   typedef explore_action_server_::GoalHandle GoalHandle;
   // TODO move_base_client
+
+  boost::mutex move_client_lock_;
+  exploration_msgs::ExploreFeedback feedback_;
+  actionlib::SimpleActionClient<move_base_msgs::MoveBaseAction> move_client_;
 
   void goalCB(GoalHandle gh);
   void moveBaseResultCb(const actionlib::SimpleClientGoalState& state, const move_base_msgs::MoveBaseResultConstPtr& result);

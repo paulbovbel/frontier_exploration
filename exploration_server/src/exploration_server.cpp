@@ -2,6 +2,7 @@
 #include "exploration_server/planner_base.h"
 #include "exploration_msgs/SetPolygon.h"
 #include "exploration_msgs/GetNextGoal.h"
+#include "exploration_msgs/BlacklistPoint.h"
 
 #include <ros/ros.h>
 #include <actionlib/server/simple_action_server.h>
@@ -17,11 +18,12 @@ namespace exploration_server{
 ExplorationServer::ExplorationServer(ros::NodeHandle nh, ros::NodeHandle private_nh):
   nh_(nh),
   private_nh_(private_nh),
+  retry_(5),
   tf_listener_(),
   explore_action_server_(nh, "explore", false)
 {
   costmap_ros_ = boost::make_shared<costmap_2d::Costmap2DROS>("explore_costmap", tf_listener_);
-
+  // TODO (vmcdermott) need to set up move base client up here (move_client_)
   // explore_action_server_.registerGoalCallback();
   // explore_action_server_.registerCancelCallback();
   explore_action_server_.start();
@@ -60,31 +62,70 @@ void ExplorationServer::goalCB(GoalHandle gh){
   tf::Stamped<tf::Pose> robot_pose;
   costmap_ros_->getRobotPose(robot_pose);
   goal_service.request.start_pose = robot_pose;
+  feedback_.robot_pose = robot_pose;
   if(goal_client.call(goal_service)){
-    ROS_INFO("Updating polygon");
+    ROS_INFO("requesting a new goal from planner plugin");
+    // send the goal to the move_base client
+    feedback_.current_goal = goal_service.response.next_goal;
+    move_client_.sendGoal(goal_service.response.next_goal, boost::bind(&ExplorationServer::moveBaseResultCb, this, _1, _2),0,0);
+    retry_ = 5;
   }
   else{
-    ROS_ERROR("Failed to call update polygon service.");
+    ROS_DEBUG("Failed to get a goal from the planner plugin.");
+    if(retry_==0){
+      ROS_ERROR("Failed exploration");
+    }
+    retry_--;
   }
-  //   1. preempt active goal handle, if any
-  //   2. set as active goal handle
-  //   3. initialize exploration planner plugin
-  //   4. update boundary polygon on costmap, if necessary
-  //   5. request next goal from planner plugin
-  //   6. send goal to move_base
+
 }
 
 void ExplorationServer::moveBaseResultCb(const actionlib::SimpleClientGoalState& state, const move_base_msgs::MoveBaseResultConstPtr& result){
-  //   1. if successful,
-  //     a) request next goal from planner pluginlib
-  //   2. if failed
-  //     a) 'handle' (retry, add to exploration blacklist PR#25, etc?)
-  //     b) move on to next exploration target
-  //     c) fail exploration?
+    if (state == actionlib::SimpleClientGoalState::ABORTED){
+        ROS_ERROR("Failed to move. Blacklisting point.");
+
+        // Find the blacklist service
+        ros::ServiceClient blacklistPointService = private_nh_.serviceClient<BlacklistPoint>("blacklist_point");
+        // Create the service request
+        BlacklistPoint srv;
+        srv.request.point = feedback_.current_goal;
+
+        // Call the service
+        if (!blacklistPointService.call(srv)) {
+            ROS_ERROR("Failed to blacklist point.");
+        }
+    }else if(state == actionlib::SimpleClientGoalState::SUCCEEDED){
+
+        // Find the clear blacklist service
+        ros::ServiceClient clearBlacklistService = private_nh_.serviceClient<std_srvs::Empty>("clear_blacklist");
+
+        // No argument
+        std_srvs::Empty srv;
+
+        // Call the clear blacklist service
+        if (!clearBlacklistService.call(srv)) {
+            ROS_ERROR("Failed to clear blacklist.");
+        }
+        // request next goal from planner plugin
+        ros::ServiceClient goal_client = private_nh_.serviceClient<exploration_msgs::GetNextGoal>("get_goal");
+        exploration_msgs::GetNextGoal goal_service;
+        tf::Stamped<tf::Pose> robot_pose;
+        costmap_ros_->getRobotPose(robot_pose);
+        goal_service.request.start_pose = robot_pose;
+        feedback_.robot_pose = robot_pose;
+        if(goal_client.call(goal_service)){
+          ROS_INFO("requesting a new goal from planner plugin");
+          //TODO: (vmcdermott) Am I doing too much here/feels repetitive and redundant with stuff in goalCB?
+        }
+        else{
+          ROS_DEBUG("Failed to get a goal from the planner plugin.");
+        }
+
+      }
 }
 
 void ExplorationServer::cancelGoalCb(GoalHandle gh){
-  //   1. if active goal handle, cancel
+    gh.setCancelled();
 }
 
 

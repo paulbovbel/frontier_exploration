@@ -86,6 +86,7 @@ private:
         //wait for move_base and costmap services
         if(!move_client_.waitForServer() || !updateBoundaryPolygon.waitForExistence() || !getNextFrontier.waitForExistence()){
             as_.setAborted();
+            ROS_INFO("mission aborted");
             return;
         }
         ROS_INFO("made it here");
