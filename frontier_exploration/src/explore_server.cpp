@@ -37,7 +37,7 @@ public:
         tf_listener_(ros::Duration(10.0)),
         private_nh_("~"),
         as_(nh_, name, boost::bind(&FrontierExplorationServer::executeCb, this, _1), false),
-        move_client_("move_base",true),
+        move_client_("p3_001/move_base",true),
         retry_(5)
     {
         private_nh_.param<double>("frequency", frequency_, 0.0);
