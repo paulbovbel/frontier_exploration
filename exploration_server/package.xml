@@ -18,5 +18,8 @@
   <depend>costmap_2d</depend>
   <depend>exploration_msgs</depend>
   <depend>roscpp</depend>
+  <export>
+    <exploration_server plugin="${prefix}/planner_plugin.xml" />
+  </export>
 
 </package>

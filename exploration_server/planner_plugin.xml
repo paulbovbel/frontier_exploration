@@ -1,0 +1,5 @@
+<library path="lib/libplanner_plugin">
+  <class type="planner_plugin::PlannerExample" base_class_type="planner_base::RegularPlanner">
+    <description>This is an example planner plugin for the exploration server.</description>
+  </class>
+</library>

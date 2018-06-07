@@ -22,7 +22,7 @@
                 resize_to_boundary: true
                 frontier_travel_point: middle
                 #set to false for gmapping, true if re-exploring a known area
-                explore_clear_space: false
+                explore_clear_space: true
 
           laser_input:
             data_type: LaserScan

@@ -158,10 +158,7 @@ Frontier FrontierSearch::buildNewFrontier(unsigned int initial_cell, unsigned in
 bool FrontierSearch::isNewFrontierCell(unsigned int idx, const std::vector<bool>& frontier_flag){
 
     //check that cell is unknown and not already marked as frontier
-    // TODO: (vmcdermott) figure out why enforcing no information breaks everything
-    // potentially because we already have info for maps and so will never find areas with no information?
-    //if(map_[idx] != NO_INFORMATION || frontier_flag[idx]){
-    if(frontier_flag[idx]){
+    if(map_[idx] != NO_INFORMATION || frontier_flag[idx]){
         return false;
     }
 

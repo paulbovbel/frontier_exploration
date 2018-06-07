@@ -23,7 +23,7 @@ ExplorationServer::ExplorationServer(ros::NodeHandle nh, ros::NodeHandle private
   explore_action_server_(nh, "explore", false)
 {
   costmap_ros_ = boost::make_shared<costmap_2d::Costmap2DROS>("explore_costmap", tf_listener_);
-  // TODO (vmcdermott) need to set up move base client up here (move_client_)
+  // TODO (vmcdermott) need to set up move base client up here (move_client_) & figure out how to register callbacks
   // explore_action_server_.registerGoalCallback();
   // explore_action_server_.registerCancelCallback();
   explore_action_server_.start();
@@ -48,6 +48,7 @@ void ExplorationServer::goalCB(GoalHandle gh){
   // update boundary polygon on costmap, if necessary
   ros::ServiceClient polygon_client = private_nh_.serviceClient<exploration_msgs::SetPolygon>("set_polygon");
   exploration_msgs::SetPolygon polygon_service;
+  // make use of the polygon service to set the boundary on the polygon using what is stored in the goalhandle
   polygon_service.request.polygon = gh.getGoal()->boundary;
   if(polygon_client.call(polygon_service)){
     ROS_INFO("Updating polygon");
@@ -60,6 +61,7 @@ void ExplorationServer::goalCB(GoalHandle gh){
   ros::ServiceClient goal_client = private_nh_.serviceClient<exploration_msgs::GetNextGoal>("get_goal");
   exploration_msgs::GetNextGoal goal_service;
   tf::Stamped<tf::Pose> robot_pose;
+  // put the robot's current position in the request to the plugin planner
   costmap_ros_->getRobotPose(robot_pose);
   goal_service.request.start_pose = robot_pose;
   feedback_.robot_pose = robot_pose;
@@ -70,10 +72,10 @@ void ExplorationServer::goalCB(GoalHandle gh){
     boost::unique_lock<boost::mutex> lock(move_client_lock_);
     move_client_.sendGoal(goal_service.response.next_goal, boost::bind(&ExplorationServer::moveBaseResultCb, this, _1, _2),0,0);
     lock.unlock();
-    retry_ = 5;
   }
   else{
     ROS_DEBUG("Failed to get a goal from the planner plugin.");
+    // try 5 times but throw an error on the 5th time
     if(retry_==0){
       ROS_ERROR("Failed exploration");
     }
@@ -108,6 +110,10 @@ void ExplorationServer::moveBaseResultCb(const actionlib::SimpleClientGoalState&
         if (!clearBlacklistService.call(srv)) {
             ROS_ERROR("Failed to clear blacklist.");
         }
+
+        // reset number of retries back to 5
+        retry_ = 5;
+
         // request next goal from planner plugin
         ros::ServiceClient goal_client = private_nh_.serviceClient<exploration_msgs::GetNextGoal>("get_goal");
         exploration_msgs::GetNextGoal goal_service;
@@ -118,15 +124,26 @@ void ExplorationServer::moveBaseResultCb(const actionlib::SimpleClientGoalState&
         if(goal_client.call(goal_service)){
           ROS_INFO("requesting a new goal from planner plugin");
           //TODO: (vmcdermott) Am I doing too much here/feels repetitive and redundant with stuff in goalCB?
+          // send the goal to the move_base client
+          feedback_.current_goal = goal_service.response.next_goal;
+          boost::unique_lock<boost::mutex> lock(move_client_lock_);
+          move_client_.sendGoal(goal_service.response.next_goal, boost::bind(&ExplorationServer::moveBaseResultCb, this, _1, _2),0,0);
+          lock.unlock();
         }
         else{
           ROS_DEBUG("Failed to get a goal from the planner plugin.");
+          // try 5 times but throw an error on the 5th time
+          if(retry_==0){
+            ROS_ERROR("Failed exploration");
+          }
+          retry_--;
         }
 
       }
 }
 
 void ExplorationServer::cancelGoalCb(GoalHandle gh){
+    // grab the move_client mutex, lock it, then cancel all move_base goals
     boost::unique_lock<boost::mutex> lock(move_client_lock_);
     move_client_.cancelGoalsAtAndBeforeTime(ros::Time::now());
     lock.unlock();

@@ -1,7 +1,8 @@
 cmake_minimum_required(VERSION 2.8.3)
 project(exploration_server)
 
-set_directory_properties(PROPERTIES COMPILE_OPTIONS "-std=c++14;-Wall;-Werror")
+set_directory_properties(PROPERTIES COMPILE_OPTIONS "-std=c++14")
+
 
 find_package(catkin REQUIRED COMPONENTS actionlib costmap_2d exploration_msgs roscpp)
 
@@ -17,6 +18,7 @@ catkin_package(
 include_directories(include ${catkin_INCLUDE_DIRS})
 
 add_library(exploration_server src/exploration_server.cpp)
+add_library(planner_plugin src/planner_plugin.cpp)
 target_link_libraries(exploration_server ${catkin_LIBRARIES})
 
 add_executable(exploration_server_node src/exploration_server_node.cpp)

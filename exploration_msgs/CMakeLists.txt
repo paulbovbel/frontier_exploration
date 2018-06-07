@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 2.8.3)
 project(exploration_msgs)
 
-set_directory_properties(PROPERTIES COMPILE_OPTIONS "-std=c++14;-Wall;-Werror")
+set_directory_properties(PROPERTIES COMPILE_OPTIONS "-std=c++14")
 
 find_package(catkin REQUIRED COMPONENTS
   actionlib_msgs
@@ -16,6 +16,8 @@ add_action_files(
 
 add_service_files(
   FILES
+  BlacklistPoint.srv
+  GetNextGoal.srv
   SetPolygon.srv
 )
 

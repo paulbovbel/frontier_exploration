@@ -82,14 +82,11 @@ private:
         //create costmap services
         ros::ServiceClient updateBoundaryPolygon = private_nh_.serviceClient<frontier_exploration::UpdateBoundaryPolygon>("explore_costmap/explore_boundary/update_boundary_polygon");
         ros::ServiceClient getNextFrontier = private_nh_.serviceClient<frontier_exploration::GetNextFrontier>("explore_costmap/explore_boundary/get_next_frontier");
-        ROS_INFO("Waiting for stuff");
         //wait for move_base and costmap services
         if(!move_client_.waitForServer() || !updateBoundaryPolygon.waitForExistence() || !getNextFrontier.waitForExistence()){
             as_.setAborted();
-            ROS_INFO("mission aborted");
             return;
         }
-        ROS_INFO("made it here");
         //set region boundary on costmap
         if(ros::ok() && as_.isActive()){
             frontier_exploration::UpdateBoundaryPolygon srv;
