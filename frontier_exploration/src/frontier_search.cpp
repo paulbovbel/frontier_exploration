@@ -46,6 +46,7 @@ std::list<Frontier> FrontierSearch::searchFrom(geometry_msgs::Point position){
     unsigned int clear, pos = costmap_.getIndex(mx,my);
     if(nearestCell(clear, pos, FREE_SPACE, costmap_)){
         bfs.push(clear);
+        ROS_INFO("checkpoint a");
     }else{
         bfs.push(pos);
         ROS_WARN("Could not find nearby clear cell to start search");
@@ -64,12 +65,20 @@ std::list<Frontier> FrontierSearch::searchFrom(geometry_msgs::Point position){
                 bfs.push(nbr);
                 //check if cell is new frontier cell (unvisited, NO_INFORMATION, free neighbour)
             }else if(isNewFrontierCell(nbr, frontier_flag)){
+                ROS_INFO("Checkpoint c");
                 frontier_flag[nbr] = true;
                 Frontier new_frontier = buildNewFrontier(nbr, pos, frontier_flag);
                 if(new_frontier.size > min_frontier_size_){
                     frontier_list.push_back(new_frontier);
                 }
             }
+            // else{
+            //   ROS_INFO("doing nothing");
+            //   // if we "have info" that's problematic
+            //   if(map_[idx] != NO_INFORMATION){
+            //     ROS_INFO("roger we have a problem");
+            //   }
+            // }
         }
     }
 
@@ -158,12 +167,14 @@ Frontier FrontierSearch::buildNewFrontier(unsigned int initial_cell, unsigned in
 bool FrontierSearch::isNewFrontierCell(unsigned int idx, const std::vector<bool>& frontier_flag){
 
     //check that cell is unknown and not already marked as frontier
-    if(map_[idx] != NO_INFORMATION || frontier_flag[idx]){
+    //if(map_[idx] != NO_INFORMATION || frontier_flag[idx]){
+    if(frontier_flag[idx]){
         return false;
     }
 
     //frontier cells should have at least one cell in 4-connected neighbourhood that is free
     BOOST_FOREACH(unsigned int nbr, nhood4(idx, costmap_)){
+
         if(map_[nbr] == FREE_SPACE){
             return true;
         }

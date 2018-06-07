@@ -104,9 +104,11 @@ private:
         }
 
         //loop until all frontiers are explored
+        ROS_INFO("checkpoint 1");
         ros::Rate rate(frequency_);
         while(ros::ok() && as_.isActive()){
 
+            ROS_INFO("checkpoint 2");
             frontier_exploration::GetNextFrontier srv;
 
             //placeholder for next goal to be sent to move base
@@ -115,16 +117,22 @@ private:
             //get current robot pose in frame of exploration boundary
             tf::Stamped<tf::Pose> robot_pose;
             explore_costmap_ros_->getRobotPose(robot_pose);
-
+            ROS_INFO("checkpoint 3");
             //provide current robot pose to the frontier search service request
             tf::poseStampedTFToMsg(robot_pose,srv.request.start_pose);
-
+            ROS_INFO("checkpoint 4");
             //evaluate if robot is within exploration boundary using robot_pose in boundary frame
             geometry_msgs::PoseStamped eval_pose = srv.request.start_pose;
             if(eval_pose.header.frame_id != goal->explore_boundary.header.frame_id){
-                tf_listener_.transformPose(goal->explore_boundary.header.frame_id, srv.request.start_pose, eval_pose);
+                try{
+                  tf_listener_.waitForTransform(goal->explore_boundary.header.frame_id, srv.request.start_pose.header.frame_id, srv.request.start_pose.header.stamp, ros::Duration(10));
+                  tf_listener_.transformPose(goal->explore_boundary.header.frame_id, srv.request.start_pose, eval_pose);
+                }
+                catch(tf::TransformException &ex){
+                  ROS_ERROR("%s", ex.what());
+                }
             }
-
+            ROS_INFO("checkpoint 5");
             //check if robot is not within exploration boundary and needs to return to center of search area
             if(goal->explore_boundary.polygon.points.size() > 0 && !pointInPolygon(eval_pose.pose.position,goal->explore_boundary.polygon)){
 
@@ -142,11 +150,13 @@ private:
                     geometry_msgs::PointStamped temp = eval_point;
                     tf_listener_.transformPoint(goal->explore_center.header.frame_id, temp, eval_point);
                 }
+                ROS_INFO("checkpoint 6");
 
                 //set goal pose to exploration center
                 goal_pose.header = goal->explore_center.header;
                 goal_pose.pose.position = goal->explore_center.point;
                 goal_pose.pose.orientation = tf::createQuaternionMsgFromYaw( yawOfVector(eval_point.point, goal->explore_center.point) );
+                ROS_INFO("checkpoint 7");
 
             }else if(getNextFrontier.call(srv)){ //if in boundary, try to find next frontier to search
 
