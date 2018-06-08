@@ -1,14 +1,21 @@
 #include <exploration_server/planner_base.h>
 
+#include <ros/ros.h>
+
 namespace planner_plugin
 {
   class PlannerExample : public planner_base::RegularPlanner
   {
     public:
-      PlannerExample(){}
+      PlannerExample():
+        nh_()
+        {}
 
       void initialize(){
         // do necessary plugin setup stuff here, be sure to advertise your services!
+        ros::ServiceServer goal_service = nh_.advertiseService("get_goal", getNextGoalService);
+        ros::ServiceServer blacklist_service = nh_.advertiseService("blacklist_point", blacklistPointService);
+        ros::ServiceServer clear_blacklist_service = nh_.advertiseService("clear_blacklist", clearBlacklistService);
       }
 
       bool getNextGoalService(exploration_msgs::GetNextGoal::Request &req, exploration_msgs::GetNextGoal::Response &res){
@@ -28,6 +35,7 @@ namespace planner_plugin
       }
 
     private:
+      ros::NodeHandle nh_;
       // declare private variables here
   };
 };

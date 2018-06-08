@@ -1,17 +1,13 @@
-#include "exploration_server/exploration_server.h"
-#include "exploration_server/planner_base.h"
-#include "exploration_msgs/SetPolygon.h"
-#include "exploration_msgs/GetNextGoal.h"
-#include "exploration_msgs/BlacklistPoint.h"
+#include <exploration_server/exploration_server.h>
+#include <exploration_server/planner_base.h>
+#include <exploration_msgs/SetPolygon.h>
+#include <exploration_msgs/GetNextGoal.h>
+#include <exploration_msgs/BlacklistPoint.h>
 
 #include <ros/ros.h>
-#include <actionlib/server/simple_action_server.h>
-#include <actionlib/client/simple_action_client.h>
 #include <pluginlib/class_loader.h>
 
 #include <tf/transform_listener.h>
-
-#include <move_base_msgs/MoveBaseAction.h>
 
 namespace exploration_server{
 
@@ -20,12 +16,15 @@ ExplorationServer::ExplorationServer(ros::NodeHandle nh, ros::NodeHandle private
   private_nh_(private_nh),
   retry_(5),
   tf_listener_(),
-  explore_action_server_(nh, "explore", false)
+  move_client_("p3_001/move_base",true),
+  explore_action_server_(nh,
+                        "exploration_server",
+                        boost::bind(&ExplorationServer::goalCB, this, _1),
+                        boost::bind(&ExplorationServer::cancelGoalCb, this, _1),
+                        false)
 {
   costmap_ros_ = boost::make_shared<costmap_2d::Costmap2DROS>("explore_costmap", tf_listener_);
   // TODO (vmcdermott) need to set up move base client up here (move_client_) & figure out how to register callbacks
-  // explore_action_server_.registerGoalCallback();
-  // explore_action_server_.registerCancelCallback();
   explore_action_server_.start();
 
 }
@@ -63,14 +62,15 @@ void ExplorationServer::goalCB(GoalHandle gh){
   tf::Stamped<tf::Pose> robot_pose;
   // put the robot's current position in the request to the plugin planner
   costmap_ros_->getRobotPose(robot_pose);
-  goal_service.request.start_pose = robot_pose;
-  feedback_.robot_pose = robot_pose;
+  tf::poseStampedTFToMsg(robot_pose, goal_service.request.start_pose);
+  feedback_.robot_pose = goal_service.request.start_pose;
   if(goal_client.call(goal_service)){
     ROS_INFO("requesting a new goal from planner plugin");
     // send the goal to the move_base client
     feedback_.current_goal = goal_service.response.next_goal;
     boost::unique_lock<boost::mutex> lock(move_client_lock_);
-    move_client_.sendGoal(goal_service.response.next_goal, boost::bind(&ExplorationServer::moveBaseResultCb, this, _1, _2),0,0);
+    move_client_goal_.target_pose = goal_service.response.next_goal;
+    move_client_.sendGoal(move_client_goal_, boost::bind(&ExplorationServer::moveBaseResultCb, this, _1, _2),0,0);
     lock.unlock();
   }
   else{
@@ -89,10 +89,10 @@ void ExplorationServer::moveBaseResultCb(const actionlib::SimpleClientGoalState&
         ROS_ERROR("Failed to move. Blacklisting point.");
 
         // Find the blacklist service
-        ros::ServiceClient blacklistPointService = private_nh_.serviceClient<BlacklistPoint>("blacklist_point");
+        ros::ServiceClient blacklistPointService = private_nh_.serviceClient<exploration_msgs::BlacklistPoint>("blacklist_point");
         // Create the service request
-        BlacklistPoint srv;
-        srv.request.point = feedback_.current_goal;
+        exploration_msgs::BlacklistPoint srv;
+        srv.request.point = feedback_.current_goal.pose.position;
 
         // Call the service
         if (!blacklistPointService.call(srv)) {
@@ -119,15 +119,16 @@ void ExplorationServer::moveBaseResultCb(const actionlib::SimpleClientGoalState&
         exploration_msgs::GetNextGoal goal_service;
         tf::Stamped<tf::Pose> robot_pose;
         costmap_ros_->getRobotPose(robot_pose);
-        goal_service.request.start_pose = robot_pose;
-        feedback_.robot_pose = robot_pose;
+        tf::poseStampedTFToMsg(robot_pose, goal_service.request.start_pose);
+        feedback_.robot_pose = goal_service.request.start_pose;
         if(goal_client.call(goal_service)){
           ROS_INFO("requesting a new goal from planner plugin");
           //TODO: (vmcdermott) Am I doing too much here/feels repetitive and redundant with stuff in goalCB?
           // send the goal to the move_base client
           feedback_.current_goal = goal_service.response.next_goal;
           boost::unique_lock<boost::mutex> lock(move_client_lock_);
-          move_client_.sendGoal(goal_service.response.next_goal, boost::bind(&ExplorationServer::moveBaseResultCb, this, _1, _2),0,0);
+          move_client_goal_.target_pose = goal_service.response.next_goal;
+          move_client_.sendGoal(move_client_goal_, boost::bind(&ExplorationServer::moveBaseResultCb, this, _1, _2),0,0);
           lock.unlock();
         }
         else{
@@ -148,9 +149,12 @@ void ExplorationServer::cancelGoalCb(GoalHandle gh){
     move_client_.cancelGoalsAtAndBeforeTime(ros::Time::now());
     lock.unlock();
     ROS_WARN("Current exploration task cancelled");
-    gh.setCancelled();
+    gh.setCanceled();
 }
 
-
+void ExplorationServer::start()
+{
+  explore_action_server_.start();
+}
 
 }

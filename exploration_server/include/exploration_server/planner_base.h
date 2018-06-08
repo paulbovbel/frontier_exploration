@@ -1,4 +1,4 @@
-#include "exploration_msgs/GetNextGoal.h"
+#include <exploration_msgs/GetNextGoal.h>
 
 #include <exploration_msgs/GetNextGoal.h>
 #include <exploration_msgs/BlacklistPoint.h>
