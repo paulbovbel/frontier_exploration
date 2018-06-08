@@ -1,5 +1,16 @@
 #include <exploration_server/planner_base.h>
+//TODO: (vmcdermott)
+// I just copied this file over from frontier exploration package, should I instead
+// have this include point to the geometry tools in frontier exploration and make
+// make frontier exploration a dependency for this package or something different?
+#include <exploration_server/geometry_tools.h>
 #include <boost/algorithm/string.hpp>
+#include <boost/foreach.hpp>
+#include <tf/transform_listener.h>
+#include <costmap_2d/costmap_2d_ros.h>
+#include <costmap_2d/costmap_2d.h>
+
+#include <math.h>
 #include <vector>
 #include <fstream>
 #include <string>
@@ -10,12 +21,24 @@ namespace planner_plugin
 {
   class PlannerExample : public planner_base::RegularPlanner
   {
+    private:
+      boost::shared_ptr<costmap_2d::Costmap2DROS> explore_costmap_ros_;
+      tf::TransformListener tf_listener_;
+      ros::NodeHandle nh_;
+      std::list<geometry_msgs::Point> blacklist_;
+      double blacklist_radius_;
+
     public:
       PlannerExample():
+        tf_listener_(ros::Duration(10.0)),
         nh_()
-        {}
+        {
+          PlannerExample::explore_costmap_ros_ = boost::shared_ptr<costmap_2d::Costmap2DROS>(new costmap_2d::Costmap2DROS("explore_costmap", tf_listener_));
+        }
 
       void initialize(){
+        // set up global variables
+        blacklist_radius_ = 1;
         // advertise plugin services for getting goals and blacklisting points
         ros::ServiceServer goal_service = nh_.advertiseService("get_goal", &PlannerExample::getNextGoalService, this);
         ros::ServiceServer blacklist_service = nh_.advertiseService("blacklist_point", &PlannerExample::blacklistPointService, this);
@@ -29,17 +52,35 @@ namespace planner_plugin
       bool getNextGoal(geometry_msgs::PoseStamped start_pose, geometry_msgs::PoseStamped &next_goal){
         //pseudo code - will fix later
         //TODO: (vmcdermott) convert pseudo code to real code
-        std::list<geometry_msgs> point_list = readPoints();
-        points = read in points from file (for the sake of example)
-        if size of points is 0:
-            no frontiers found, return false
-        for each point in points:
-            if it is the closest point to the robot and is not in blacklist:
-              selected point = that points
-        include check for if there were no non blacklisted  points
-        next_goal.header.frame_id = the costmap -> getGlobalFrameID();
+        std::list<geometry_msgs::Point> point_list = readPoints();
+        if(point_list.size()==0){
+          ROS_INFO("No points found... exploration complete");
+          return false;
+        }
+
+        geometry_msgs::Point selected_point;
+        float min_distance = std::numeric_limits<double>::infinity();
+        BOOST_FOREACH(geometry_msgs::Point point, point_list){
+          // calculate the distance between a given point and the robot location
+          dist_to_robot = sqrt(pow(start_pose.position.x-point.x, 2)+pow(start_pose.position.y-point.y, 2));
+          // if it is the closest point to the robot and is not in blacklist
+          // (and there are no points near that point in the blacklist - hence not any points nearby)
+          if(dist_to_robot < min_distance && !anyPointsNearby(point, blacklist_, blacklist_radius_){
+            min_distance = dist_to_robot;
+            selected_point = point;
+          }
+        }
+
+        // check if there were no non blacklisted points
+        if(std::isinf(min_distance)){
+          ROS_INFO("No valid non blacklisted points found, exploration complete");
+          return false;
+        }
+
+        // set the response goal that we are sending back to the server
+        next_goal.header.frame_id = explore_costmap_ros_ -> getGlobalFrameID();
         next_goal.header.stamp = ros::Time::now();
-        next_goal.pose.position = selected point
+        next_goal.pose.position = selected_point;
         next_goal.pose.orientation - tf::createQuaternionMsgFromYaw(yawOfVector(start_pose.pose.position, next_goal.pose.position));
         return true;
       }
@@ -70,8 +111,5 @@ namespace planner_plugin
         return true;
       }
 
-    private:
-      ros::NodeHandle nh_;
-      std::list<geometry_msgs::Point> blacklist_;
   };
 };
