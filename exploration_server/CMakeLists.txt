@@ -26,6 +26,11 @@ target_link_libraries(exploration_server_node
   exploration_server ${catkin_LIBRARIES}
 )
 
+add_executable(plugin_client src/plugin_client.cpp)
+target_link_libraries(plugin_client
+  exploration_server ${catkin_LIBRARIES}
+)
+
 install(TARGETS exploration_server exploration_server_node
   ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
   LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}

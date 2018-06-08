@@ -1,0 +1,106 @@
+<launch>
+
+    <node pkg="exploration_server" type="plugin_client" name="plugin_client" output="screen"/>
+
+    <node pkg="exploration_server" type="exploration_server_node" name="exploration_server_node" output="screen" >
+
+        <param name="frequency" value="1.0"/>
+        <param name="goal_aliasing" value="2.0"/>
+
+        <rosparam ns="explore_costmap" subst_value="true">
+          transform_tolerance: 0.15
+          footprint_padding: 0.0  # default, in case move_base exits during pad_footprint_recovery
+
+          plugins:
+          - {name: static_layer,            type: "costmap_2d::StaticLayer"}
+          - {name: polygon_boundary, type: "polygon_layer::PolygonLayer"}
+          - {name: obstacle_layer,          type: "locus_costmap::DecayingObstacleLayer"}
+          - {name: depth_obstacle_layer,    type: "locus_costmap::DecayingObstacleLayer"}
+          - {name: inflation_layer,         type: "costmap_2d::InflationLayer"}
+
+          polygon_boundary:
+                resize_to_polygon: false
+
+          laser_input:
+            data_type: LaserScan
+            topic: scan_filtered
+            marking: true
+            clearing: true
+            expected_update_rate: 0.2
+
+          depth_scan_input:
+            data_type: LaserScan
+            topic: depth_camera/scan
+            marking: true
+            clearing: true
+            inf_is_valid: true
+
+          obstacle_layer:
+            map_frame_id: map
+            footprint_clearing_enabled: true
+            track_unknown_space: true
+            obstacle_range: 8.0
+            raytrace_range: 10.0
+            suppress_robot_cost: true
+            suppress_stopped: false
+            suppression_min_velocity: 0.01
+            suppression_radius_min: 0.36
+            suppression_radius_max: 0.45
+            suppression_timeout: 0.4
+            suppression_max_range: 12.0
+            suppression_prediction_factor: 1.0
+            goal_clearing:
+              clear_pending: false
+              clear_active: false
+              clear_preempted: true
+              clear_succeeded: true
+              clear_aborted: true
+              clear_rejected: false
+              clear_preempting: false
+              clear_recalling: false
+              clear_recalled: false
+              clear_lost: true
+            pose_clears: true
+
+          depth_obstacle_layer:
+            map_frame_id: map
+            footprint_clearing_enabled: true
+            track_unknown_space: true
+            obstacle_range: 8.0
+            raytrace_range: 10.0
+            suppress_robot_cost: true
+            suppress_stopped: false
+            suppression_min_velocity: 0.01
+            suppression_radius_min: 0.36
+            suppression_radius_max: 0.45
+            suppression_timeout: 0.4
+            suppression_max_range: 12.0
+            suppression_prediction_factor: 1.0
+            goal_clearing:
+              clear_pending: false
+              clear_active: false
+              clear_preempted: true
+              clear_succeeded: true
+              clear_aborted: true
+              clear_rejected: false
+              clear_preempting: false
+              clear_recalling: false
+              clear_recalled: false
+              clear_lost: true
+            pose_clears: true
+
+          inflation_layer:
+            cost_scaling_factor: 4.0
+            inflation_radius: 0.8
+      </rosparam>
+
+        <rosparam file="$(find locus_autonomy)/config/global_costmap_params.yaml" command="load" ns="explore_costmap" />
+        <param name="local_costmap/global_frame" value="p3_001/odom"/>
+        <param name="local_costmap/robot_base_frame" value="p3_001/base_link"/>
+        <param name="explore_costmap/global_frame" value="p3_001/odom"/>
+        <param name="explore_costmap/robot_base_frame" value="p3_001/base_link"/>
+        <param name="robot_name" value="p3_001"/>
+
+    </node>
+
+</launch>

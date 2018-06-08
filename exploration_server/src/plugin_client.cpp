@@ -1,3 +1,8 @@
+#include <ros/ros.h>
+#include <actionlib/client/simple_action_client.h>
+#include <exploration_msgs/ExploreAction.h>
+#include <geometry_msgs/PolygonStamped.h>
+#include <geometry_msgs/PointStamped.h>
 
 //TODO: (vmcdermott) make a proper header file for this and clean up
 namespace plugin_client{
@@ -8,7 +13,7 @@ namespace plugin_client{
     geometry_msgs::PolygonStamped polygon;
 
     // point callback for starting off exploration
-    void ExplorationServer::pointCb(const geometry_msgs::PointStampedConstPtr& point){
+    void pointCb(const geometry_msgs::PointStampedConstPtr& point){
       actionlib::SimpleActionClient<exploration_msgs::ExploreAction> exploreClient("exploration_server", true);
       exploreClient.waitForServer();
       exploration_msgs::ExploreGoal goal;
@@ -26,16 +31,16 @@ namespace plugin_client{
       nh_()
       {
         ROS_INFO("Use the Rviz point tool to place a point anywhere to begin");
-        point_ = nh_.subscribe("/clicked_point",1,&ExplorationServer::pointCb, this);
+        point_ = nh_.subscribe("/clicked_point",1,&PluginClient::pointCb, this);
       }
-  }
+  };
 }
 
 int main(int argc, char** argv)
 {
     ros::init(argc, argv, "plugin_client");
 
-    frontier_exploration::FrontierExplorationClient client;
+    plugin_client::PluginClient client;
     ros::spin();
     return 0;
 }
