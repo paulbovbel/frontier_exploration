@@ -14,7 +14,7 @@ namespace plugin_client{
 
     // point callback for starting off exploration
     void pointCb(const geometry_msgs::PointStampedConstPtr& point){
-      actionlib::SimpleActionClient<exploration_msgs::ExploreAction> exploreClient("exploration_server", true);
+      actionlib::SimpleActionClient<exploration_msgs::ExploreAction> exploreClient("exploration_server_node", true);
       exploreClient.waitForServer();
       exploration_msgs::ExploreGoal goal;
       // send the name of the plugin you want to use to get goals

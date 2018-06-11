@@ -18,7 +18,7 @@ ExplorationServer::ExplorationServer(ros::NodeHandle nh, ros::NodeHandle private
   tf_listener_(),
   move_client_("p3_001/move_base",true),
   explore_action_server_(nh,
-                        "exploration_server",
+                        "exploration_server_node",
                         boost::bind(&ExplorationServer::goalCB, this, _1),
                         boost::bind(&ExplorationServer::cancelGoalCb, this, _1),
                         false)

@@ -43,6 +43,9 @@ namespace planner_plugin
       }
 
       bool blacklistPointService(exploration_msgs::BlacklistPoint::Request &req, exploration_msgs::BlacklistPoint::Response &res){
+        blacklist_.push_back(req.point);
+        ROS_INFO("Blacklist point added %f, %f", req.point.x, req.point.y);
+
         return true;
       }
 
@@ -73,17 +76,18 @@ namespace planner_plugin
       }
 
       bool getNextGoal(geometry_msgs::PoseStamped start_pose, geometry_msgs::PoseStamped &next_goal){
-        //pseudo code - will fix later
-        //TODO: (vmcdermott) convert pseudo code to real code
+        // read in a list of points from a file
         std::list<geometry_msgs::Point> point_list = PlannerExample::readPoints();
         if(point_list.size()==0){
           ROS_INFO("No points found... exploration complete");
           return false;
         }
 
+        // select which point the robot should move to
         geometry_msgs::Point selected_point;
         float min_distance = std::numeric_limits<double>::infinity();
         float dist_to_robot;
+        ROS_INFO("Robot is now at %d, %d", start_pose.pose.position.x, start_pose.pose.position.y);
         BOOST_FOREACH(geometry_msgs::Point point, point_list){
           // calculate the distance between a given point and the robot location
           dist_to_robot = sqrt(pow(start_pose.pose.position.x-point.x, 2)+pow(start_pose.pose.position.y-point.y, 2));
@@ -101,6 +105,7 @@ namespace planner_plugin
           return false;
         }
 
+        ROS_INFO("Robot moving to: %d, %d", selected_point.x, selected_point.y);
         // set the response goal that we are sending back to the server
         next_goal.header.frame_id = explore_costmap_ros_ -> getGlobalFrameID();
         next_goal.header.stamp = ros::Time::now();

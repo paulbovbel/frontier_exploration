@@ -12,6 +12,7 @@ catkin_package(
     actionlib
     costmap_2d
     exploration_msgs
+    polygon_layer
     roscpp
 )
 

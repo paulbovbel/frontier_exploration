@@ -30,6 +30,7 @@ void PolygonLayer::onInitialize()
     &PolygonLayer::reconfigureCB, this, _1, _2);
   dsrv_->setCallback(cb);
 
+  ROS_INFO("advertising the polygon service");
   set_polygon_service_ = nh_.advertiseService("set_polygon", &PolygonLayer::setPolygonCb, this);
   current_polygon_pub_ = nh_.advertise<geometry_msgs::PolygonStamped>("current_polygon", 10, true);
 

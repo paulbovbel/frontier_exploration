@@ -17,6 +17,7 @@
   <depend>actionlib</depend>
   <depend>costmap_2d</depend>
   <depend>exploration_msgs</depend>
+  <depend>polygon_layer</depend>
   <depend>roscpp</depend>
   <export>
     <exploration_server plugin="${prefix}/planner_plugin.xml" />
