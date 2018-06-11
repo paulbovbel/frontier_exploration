@@ -7,7 +7,7 @@
 #include <geometry_msgs/Point.h>
 #include <costmap_2d/costmap_2d.h>
 
-namespace frontier_exploration{
+namespace geometry_tools{
 
   /**
   * @brief Calculate distance between two points
@@ -49,7 +49,7 @@ namespace frontier_exploration{
   bool pointsNearby(const T &one, const S &two, const double &proximity){
       return pointsDistance(one, two) <= proximity;
   }
-  
+
   /**
   * @brief Evaluate whether a point is approximately adjacent, within a specified proximity distance, to any point in a list.
   * @param one Point one
