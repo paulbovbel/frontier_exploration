@@ -47,3 +47,10 @@ install(DIRECTORY include/${PROJECT_NAME}/
 install(FILES costmap_plugins.xml
   DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}
 )
+
+find_package(roslint REQUIRED)
+roslint_cpp()
+
+if(CATKIN_ENABLE_TESTING)
+  roslint_add_test()
+endif()

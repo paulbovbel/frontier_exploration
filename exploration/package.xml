@@ -1,12 +1,13 @@
 <?xml version="1.0"?>
 <package format="2">
   <name>exploration</name>
-  <version>0.3.1</version>
+  <version>0.4.2</version>
   <description>Exploration framework for the ROS navigation stack</description>
 
   <license>Proprietary</license>
 
   <author email="paul@bovbel.com">Paul Bovbel</author>
+  <author email="vickymmcd@gmail.com">Vicky McDermott</author>
   <maintainer email="paul@bovbel.com">Paul Bovbel</maintainer>
 
   <buildtool_depend>catkin</buildtool_depend>

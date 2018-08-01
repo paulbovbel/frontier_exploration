@@ -1,25 +1,28 @@
-#ifndef FRONTIER_SEARCH_H_
-#define FRONTIER_SEARCH_H_
+#ifndef FRONTIER_EXPLORATION_FRONTIER_SEARCH_H
+#define FRONTIER_EXPLORATION_FRONTIER_SEARCH_H
 
 #include <frontier_exploration/Frontier.h>
 #include <costmap_2d/costmap_2d.h>
+#include <list>
+#include <string>
+#include <vector>
 
-namespace frontier_exploration{
+namespace frontier_exploration
+{
 
 /**
  * @brief Thread-safe implementation of a frontier-search task for an input costmap.
  */
-class FrontierSearch{
-
+class FrontierSearch
+{
 public:
-
     /**
      * @brief Constructor for search task
      * @param costmap Reference to costmap data to search.
      * @param min_frontier_size The minimum size to accept a frontier
      * @param travel_point The requested travel point (closest|middle|centroid)
      */
-    FrontierSearch(costmap_2d::Costmap2D& costmap, int min_frontier_size, std::string &travel_point);
+    FrontierSearch(costmap_2d::Costmap2D& costmap, unsigned int min_frontier_size, std::string &travel_point);
 
     /**
      * @brief Runs search implementation, outward from the start position
@@ -29,7 +32,6 @@ public:
     std::list<Frontier> searchFrom(geometry_msgs::Point position);
 
 protected:
-
     /**
      * @brief Starting from an initial cell, build a frontier from valid adjacent cells
      * @param initial_cell Index of cell to start frontier building
@@ -48,14 +50,12 @@ protected:
     bool isNewFrontierCell(unsigned int idx, const std::vector<bool>& frontier_flag);
 
 private:
-
     costmap_2d::Costmap2D& costmap_;
     unsigned char* map_;
     unsigned int size_x_ , size_y_;
-    int min_frontier_size_;
+    unsigned int min_frontier_size_;
     std::string travel_point_;
-
 };
 
-}
-#endif
+}  // namespace frontier_exploration
+#endif  // FRONTIER_EXPLORATION_FRONTIER_SEARCH_H

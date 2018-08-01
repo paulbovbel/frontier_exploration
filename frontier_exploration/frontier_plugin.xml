@@ -1,0 +1,5 @@
+<library path="lib/libfrontier_plugin">
+  <class type="frontier_exploration::FrontierPlugin" base_class_type="exploration_server::BasePlugin">
+    <description>This is a frontier exploration plugin for the exploration server.</description>
+  </class>
+</library>
