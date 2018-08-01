@@ -39,7 +39,7 @@ generate_messages(
 
 catkin_package(
   INCLUDE_DIRS include
-  LIBRARIES explore_costmap
+  LIBRARIES frontier_plugin
   CATKIN_DEPENDS
     costmap_2d
     exploration_server
@@ -72,13 +72,13 @@ if(CATKIN_ENABLE_TESTING)
   link_directories(${GTEST_LIBRARY_DIRS})
 
   catkin_add_gtest(frontier_search_tests src/test/frontier_search_tests.cpp)
-  target_link_libraries(frontier_search_tests explore_costmap)
+  target_link_libraries(frontier_search_tests frontier_plugin)
 
   catkin_add_gtest(geometry_tools_tests src/test/geometry_tools_tests.cpp)
-  target_link_libraries(geometry_tools_tests explore_costmap)
+  target_link_libraries(geometry_tools_tests frontier_plugin)
 
   catkin_add_gtest(costmap_tools_tests src/test/costmap_tools_tests.cpp)
-  target_link_libraries(costmap_tools_tests explore_costmap)
+  target_link_libraries(costmap_tools_tests frontier_plugin)
 
 endif()
 

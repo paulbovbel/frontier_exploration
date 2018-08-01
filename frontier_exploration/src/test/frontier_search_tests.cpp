@@ -1,6 +1,6 @@
 #include "ros/ros.h"
 #include "costmap_2d/costmap_2d.h"
-#include "frontier_exploration/geometry_tools.h"
+#include "exploration_server/geometry_tools.h"
 #include "boost/foreach.hpp"
 
 #include <gtest/gtest.h>
