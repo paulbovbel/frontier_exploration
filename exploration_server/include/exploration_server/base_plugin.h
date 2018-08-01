@@ -28,7 +28,7 @@ class BasePlugin
     * @brief Method to initialize the planner plugin
     * @param costmap pointer to the costmap that can be used by the planner plugin
     */
-    virtual void initialize(boost::shared_ptr<costmap_2d::Costmap2DROS>& costmap) = 0;
+    virtual void initialize(boost::shared_ptr<costmap_2d::Costmap2DROS>& costmap) = 0;  // NOLINT (runtime/references)
 
     /**
     * @brief Method to add a point to the collection of visited points

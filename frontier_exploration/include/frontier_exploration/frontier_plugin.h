@@ -39,7 +39,7 @@ class FrontierPlugin : public exploration_server::BasePlugin
      * @brief Implementation of method to initialize the FrontierPlanner plugin
      * @param costmap pointer to the costmap that can be used by the planner plugin
      */
-    virtual void initialize(boost::shared_ptr<costmap_2d::Costmap2DROS>& costmap);
+    virtual void initialize(boost::shared_ptr<costmap_2d::Costmap2DROS>& costmap);  // NOLINT (runtime/references)
 
     /**
      * @brief Future define for visualization_msgs::Marker::DELETEALL. Constant is not defined in ROS Indigo, but functionality is implemented

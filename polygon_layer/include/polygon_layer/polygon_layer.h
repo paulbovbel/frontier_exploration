@@ -37,7 +37,8 @@ public:
   /**
    * @brief Update requested costmap window so the polygon is displayed on the costmap
    */
-  virtual void updateCosts(costmap_2d::Costmap2D &master_grid, int min_i, int min_j, int max_i, int max_j);
+  virtual void updateCosts(costmap_2d::Costmap2D &master_grid,  // NOLINT (runtime/references)
+    int min_i, int min_j, int max_i, int max_j);
 
   /**
    * @brief deactivate the polygon costmap
@@ -61,7 +62,8 @@ private:
    * @param res Service response
    * @return True on service success, false otherwise
    */
-  bool setPolygonCb(exploration_msgs::SetPolygon::Request &req, exploration_msgs::SetPolygon::Response &res);
+  bool setPolygonCb(exploration_msgs::SetPolygon::Request &req,  // NOLINT (runtime/references)
+    exploration_msgs::SetPolygon::Response &res);  // NOLINT (runtime/references)
 
   /**
    * @brief Set polygon boundary to be drawn on map
@@ -76,7 +78,7 @@ private:
    */
   void updateBoundsFromPolygon(const geometry_msgs::Polygon &polygon);
 
-  void reconfigureCb(costmap_2d::GenericPluginConfig &config, uint32_t level);
+  void reconfigureCb(costmap_2d::GenericPluginConfig &config, uint32_t level);  // NOLINT (runtime/references)
 
   boost::shared_ptr<dynamic_reconfigure::Server<costmap_2d::GenericPluginConfig> > dsrv_;
 

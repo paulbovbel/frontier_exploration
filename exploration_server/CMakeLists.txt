@@ -42,6 +42,7 @@ install(DIRECTORY include/${PROJECT_NAME}/
 
 
 find_package(roslint REQUIRED)
+set(ROSLINT_CPP_OPTS "--filter=-legal/copyright")
 roslint_cpp()
 
 if(CATKIN_ENABLE_TESTING)

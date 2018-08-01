@@ -22,7 +22,7 @@ using costmap_2d::NO_INFORMATION;
 using costmap_2d::FREE_SPACE;
 
 FrontierSearch::FrontierSearch(costmap_2d::Costmap2D &costmap, unsigned int min_frontier_size,
-  std::string &travel_point) :
+  const std::string &travel_point) :
     costmap_(costmap), min_frontier_size_(min_frontier_size), travel_point_(travel_point) { }
 
 std::list<Frontier> FrontierSearch::searchFrom(geometry_msgs::Point position)

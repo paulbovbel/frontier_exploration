@@ -37,7 +37,7 @@ class ExamplePlugin : public exploration_server::BasePlugin
      * @brief Implementation of method to initialize the ExamplePlugin plugin
      * @param costmap pointer to the costmap that can be used by the planner plugin
      */
-    virtual void initialize(boost::shared_ptr<costmap_2d::Costmap2DROS>& costmap);
+    virtual void initialize(boost::shared_ptr<costmap_2d::Costmap2DROS>& costmap);  // NOLINT (runtime/references)
 
     /**
      * @brief Funtion to read in a list of points from a txt file

@@ -95,7 +95,8 @@ std::vector<unsigned int> nhood8(unsigned int idx, const costmap_2d::Costmap2D& 
  * @param costmap Reference to map data
  * @return True if a cell with the requested value was found
  */
-bool nearestCell(unsigned int &result, unsigned int start, unsigned char val, const costmap_2d::Costmap2D& costmap)
+bool nearestCell(unsigned int &result, unsigned int start, unsigned char val,  // NOLINT (runtime/references)
+  const costmap_2d::Costmap2D& costmap)  // NOLINT (runtime/references)
 {
     const unsigned char* map = costmap.getCharMap();
     const unsigned int size_x = costmap.getSizeInCellsX(), size_y = costmap.getSizeInCellsY();

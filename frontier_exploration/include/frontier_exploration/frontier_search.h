@@ -22,7 +22,8 @@ public:
      * @param min_frontier_size The minimum size to accept a frontier
      * @param travel_point The requested travel point (closest|middle|centroid)
      */
-    FrontierSearch(costmap_2d::Costmap2D& costmap, unsigned int min_frontier_size, std::string &travel_point);
+    FrontierSearch(costmap_2d::Costmap2D& costmap,  // NOLINT (runtime/references)
+      unsigned int min_frontier_size, const std::string &travel_point);
 
     /**
      * @brief Runs search implementation, outward from the start position
@@ -39,7 +40,8 @@ protected:
      * @param frontier_flag Flag vector indicating which cells are already marked as frontiers
      * @return
      */
-    Frontier buildNewFrontier(unsigned int initial_cell, unsigned int reference, std::vector<bool>& frontier_flag);
+    Frontier buildNewFrontier(unsigned int initial_cell, unsigned int reference,
+      std::vector<bool>& frontier_flag);  // NOLINT (runtime/references)
 
     /**
      * @brief isNewFrontierCell Evaluate if candidate cell is a valid candidate for a new frontier.

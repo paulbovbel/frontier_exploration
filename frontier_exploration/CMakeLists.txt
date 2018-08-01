@@ -96,6 +96,7 @@ install(FILES frontier_plugin.xml
 )
 
 find_package(roslint REQUIRED)
+set(ROSLINT_CPP_OPTS "--filter=-legal/copyright")
 roslint_cpp()
 
 if(CATKIN_ENABLE_TESTING)
