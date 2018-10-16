@@ -1,0 +1,23 @@
+<?xml version="1.0"?>
+<package format="2">
+  <name>exploration_msgs</name>
+  <version>0.4.2</version>
+  <description>Exploration messages, services, and actions</description>
+
+  <author email="paul@bovbel.com">Paul Bovbel</author>
+  <author email="vickymmcd@gmail.com">Vicky McDermott</author>
+  <maintainer email="paul@bovbel.com">Paul Bovbel</maintainer>
+
+  <license>Proprietary</license>
+
+  <buildtool_depend>catkin</buildtool_depend>
+
+  <depend>actionlib_msgs</depend>
+  <depend>geometry_msgs</depend>
+
+  <build_depend>message_generation</build_depend>
+  <build_depend>roslint</build_depend>
+
+  <exec_depend>message_runtime</exec_depend>
+
+</package>

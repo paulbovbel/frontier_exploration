@@ -1,0 +1,29 @@
+<?xml version="1.0"?>
+<package format="2">
+  <name>exploration_server</name>
+  <version>0.4.2</version>
+  <description>Exploration Server</description>
+  <author email="paul@bovbel.com">Paul Bovbel</author>
+  <author email="vickymmcd@gmail.com">Vicky McDermott</author>
+  <maintainer email="paul@bovbel.com">Paul Bovbel</maintainer>
+
+  <url type="website">http://ros.org/wiki/frontier_exploration</url>
+  <url type="bugtracker">https://github.com/paulbovbel/frontier_exploration/issues</url>
+  <url type="repository">https://github.com/paulbovbel/frontier_exploration</url>
+
+  <license>BSD</license>
+
+  <buildtool_depend>catkin</buildtool_depend>
+  <build_depend>roslint</build_depend>
+
+  <depend>actionlib</depend>
+  <depend>costmap_2d</depend>
+  <depend>exploration_msgs</depend>
+  <depend>move_base_msgs</depend>
+  <depend>polygon_layer</depend>
+  <depend>roscpp</depend>
+  <export>
+    <exploration_server plugin="${prefix}/example_plugin.xml" />
+  </export>
+
+</package>
