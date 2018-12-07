@@ -2,14 +2,13 @@
 #define POLYGON_LAYER_POLYGON_LAYER_H
 
 #include <costmap_2d/costmap_layer.h>
-#include <dynamic_reconfigure/server.h>
-#include <std_srvs/Empty.h>
-
 #include <costmap_2d/GenericPluginConfig.h>
+#include <dynamic_reconfigure/server.h>
 #include <exploration_msgs/SetPolygon.h>
 #include <geometry_msgs/PolygonStamped.h>
-
 #include <ros/ros.h>
+#include <std_srvs/Empty.h>
+#include <tf/transform_listener.h>
 
 namespace polygon_layer
 {

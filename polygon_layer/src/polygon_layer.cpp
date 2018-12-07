@@ -1,10 +1,11 @@
 #include <polygon_layer/polygon_layer.h>
 
-#include <pluginlib/class_list_macros.hpp>
-#include <costmap_2d/costmap_2d.h>
-#include <typeinfo>
-#include <limits>
 #include <algorithm>
+#include <costmap_2d/costmap_2d.h>
+#include <geometry_msgs/PointStamped.h>
+#include <limits>
+#include <pluginlib/class_list_macros.hpp>
+#include <typeinfo>
 
 
 PLUGINLIB_EXPORT_CLASS(polygon_layer::PolygonLayer, costmap_2d::Layer)
