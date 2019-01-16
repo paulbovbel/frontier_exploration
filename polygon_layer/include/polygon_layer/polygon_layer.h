@@ -8,6 +8,7 @@
 #include <costmap_2d/GenericPluginConfig.h>
 #include <exploration_msgs/SetPolygon.h>
 #include <geometry_msgs/PolygonStamped.h>
+#include <tf/transform_listener.h>
 
 #include <ros/ros.h>
 

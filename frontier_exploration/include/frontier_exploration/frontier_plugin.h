@@ -10,6 +10,7 @@
 #include <boost/foreach.hpp>
 #include <string>
 #include <vector>
+#include <tf/transform_listener.h>
 
 #include <ros/ros.h>
 

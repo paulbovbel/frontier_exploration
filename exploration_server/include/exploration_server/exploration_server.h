@@ -8,6 +8,8 @@
 #include <exploration_msgs/ExploreAction.h>
 
 #include <move_base_msgs/MoveBaseAction.h>
+#include <tf/transform_listener.h>
+#include <tf2_ros/transform_listener.h>
 
 #include <ros/ros.h>
 
@@ -40,6 +42,8 @@ class ExplorationServer
     ros::NodeHandle private_nh_;
     int retry_;
     tf::TransformListener tf_listener_;
+    tf2_ros::Buffer tf2_buffer_;
+    tf2_ros::TransformListener tf2_listener_;
     bool success_;
     bool moving_;
     actionlib::SimpleActionClient<move_base_msgs::MoveBaseAction> move_client_;
