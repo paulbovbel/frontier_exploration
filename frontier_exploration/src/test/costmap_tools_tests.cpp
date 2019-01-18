@@ -21,8 +21,8 @@ protected:
 TEST_F(NeighborhoodFunctionTest, middle)
 {
     unsigned int idx = costmap_.getIndex(4, 4);
-    ASSERT_EQ(4, frontier_exploration::nhood4(idx, costmap_).size());
-    ASSERT_EQ(8, frontier_exploration::nhood8(idx, costmap_).size());
+    ASSERT_EQ(4u, frontier_exploration::nhood4(idx, costmap_).size());
+    ASSERT_EQ(8u, frontier_exploration::nhood8(idx, costmap_).size());
 }
 
 TEST_F(NeighborhoodFunctionTest, edge)
@@ -34,8 +34,8 @@ TEST_F(NeighborhoodFunctionTest, edge)
     to_test.push_back(costmap_.getIndex(0, 4));
     BOOST_FOREACH(unsigned int idx, to_test)
     {
-        ASSERT_EQ(3, frontier_exploration::nhood4(idx, costmap_).size());
-        ASSERT_EQ(5, frontier_exploration::nhood8(idx, costmap_).size());
+        ASSERT_EQ(3u, frontier_exploration::nhood4(idx, costmap_).size());
+        ASSERT_EQ(5u, frontier_exploration::nhood8(idx, costmap_).size());
     }
 }
 
@@ -49,16 +49,16 @@ TEST_F(NeighborhoodFunctionTest, corner)
     to_test.push_back(costmap_.getIndex(0, 0));
     BOOST_FOREACH(unsigned int idx, to_test)
     {
-        ASSERT_EQ(2, frontier_exploration::nhood4(idx, costmap_).size());
-        ASSERT_EQ(3, frontier_exploration::nhood8(idx, costmap_).size());
+        ASSERT_EQ(2u, frontier_exploration::nhood4(idx, costmap_).size());
+        ASSERT_EQ(3u, frontier_exploration::nhood8(idx, costmap_).size());
     }
 }
 
 TEST_F(NeighborhoodFunctionTest, offMap)
 {
     unsigned int idx = costmap_.getIndex(12, 12);
-    ASSERT_EQ(0, frontier_exploration::nhood4(idx, costmap_).size());
-    ASSERT_EQ(0, frontier_exploration::nhood8(idx, costmap_).size());
+    ASSERT_EQ(0u, frontier_exploration::nhood4(idx, costmap_).size());
+    ASSERT_EQ(0u, frontier_exploration::nhood8(idx, costmap_).size());
 }
 
 class NearestCellTest : public ::testing::Test
