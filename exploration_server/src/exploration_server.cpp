@@ -19,6 +19,7 @@ ExplorationServer::ExplorationServer(ros::NodeHandle nh, ros::NodeHandle private
   private_nh_("~"),
   retry_(5),
   tf_listener_(),
+  tf2_listener_(tf2_buffer_),
   success_(false),
   moving_(false),
   move_client_("p3_001/move_base", true),
@@ -29,7 +30,7 @@ ExplorationServer::ExplorationServer(ros::NodeHandle nh, ros::NodeHandle private
                         boost::bind(&ExplorationServer::cancelGoalCb, this, _1),
                         false)
 {
-  costmap_ros_ = boost::make_shared<costmap_2d::Costmap2DROS>("explore_costmap", tf_listener_);
+  costmap_ros_ = boost::make_shared<costmap_2d::Costmap2DROS>("explore_costmap", tf2_buffer_);
   explore_action_server_.start();
 }
 
@@ -139,10 +140,8 @@ bool ExplorationServer::inBoundary()
   if (moving_)
     return false;
   // get current robot pose in frame of exploration boundary
-  tf::Stamped<tf::Pose> robot_pose;
-  costmap_ros_->getRobotPose(robot_pose);
   geometry_msgs::PoseStamped pose1;
-  tf::poseStampedTFToMsg(robot_pose, pose1);
+  costmap_ros_->getRobotPose(pose1);
   // evaluate if robot is within exploration boundary using robot_pose in boundary frame
   geometry_msgs::PoseStamped eval_pose = pose1;
   if (eval_pose.header.frame_id != polygon_.header.frame_id)
@@ -204,12 +203,10 @@ void ExplorationServer::requestAndSendGoal()
 {
   if (moving_)
     return;
-  tf::Stamped<tf::Pose> robot_pose;
   std::vector<geometry_msgs::Point> point_list;
   // get the robot's current position for the request to the plugin planner
   geometry_msgs::PoseStamped current_pose;
-  costmap_ros_->getRobotPose(robot_pose);
-  tf::poseStampedTFToMsg(robot_pose, current_pose);
+  costmap_ros_->getRobotPose(current_pose);
   feedback_.robot_pose = current_pose;
   // request next goal from planner plugin
   point_list = planner_->whereToExplore(current_pose, move_client_goal_.target_pose.pose.position, previous_state_);
