@@ -10,6 +10,7 @@
 #include <frontier_exploration/Frontier.h>
 #include <frontier_exploration/UpdateBoundaryPolygon.h>
 #include <frontier_exploration/GetNextFrontier.h>
+#include <frontier_exploration/GetAllFrontiers.h>
 
 namespace frontier_exploration
 {
@@ -84,10 +85,19 @@ protected:
      * @brief Search the costmap for next reachable frontier to explore
      * @param start_pose Pose from which to start search
      * @param next_frontier Pose of found frontier
-     * @return True if a reachable frontier was found, false otherwise
+     * @param error_code error code
+     * @return True if no unexpected errors
      */
-    bool getNextFrontier(geometry_msgs::PoseStamped start_pose, geometry_msgs::PoseStamped &next_frontier);
+    bool getNextFrontier(geometry_msgs::PoseStamped start_pose, geometry_msgs::PoseStamped &next_frontier, int &error_code);
 
+    /**
+     * @brief Get all frontiers to explore
+     * @param req Service request
+     * @param res Service response
+     * @return True if no unexpected errors
+     */
+    bool getAllFrontiersService(frontier_exploration::GetAllFrontiers::Request &req, 
+                                frontier_exploration::GetAllFrontiers::Response &res);
 private:
 
     /**
@@ -101,6 +111,7 @@ private:
     dynamic_reconfigure::Server<costmap_2d::GenericPluginConfig> *dsrv_;
     ros::ServiceServer polygonService_;
     ros::ServiceServer frontierService_;
+    ros::ServiceServer allFrontiersService_;
     geometry_msgs::Polygon polygon_;
     tf::TransformListener tf_listener_;
 

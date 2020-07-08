@@ -1,5 +1,6 @@
 cmake_minimum_required(VERSION 2.8.3)
 project(frontier_exploration)
+add_compile_options(-std=c++11)
 
 find_package(catkin REQUIRED COMPONENTS
   costmap_2d
@@ -12,6 +13,7 @@ find_package(catkin REQUIRED COMPONENTS
   actionlib
   actionlib_msgs
   visualization_msgs
+  std_srvs
   message_generation
 )
 
@@ -27,6 +29,7 @@ add_service_files(
   FILES
   UpdateBoundaryPolygon.srv
   GetNextFrontier.srv
+  GetAllFrontiers.srv
 )
 
 add_action_files(

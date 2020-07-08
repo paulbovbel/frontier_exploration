@@ -56,6 +56,7 @@ namespace frontier_exploration
 
         polygonService_ = nh_.advertiseService("update_boundary_polygon", &BoundedExploreLayer::updateBoundaryPolygonService, this);
         frontierService_ = nh_.advertiseService("get_next_frontier", &BoundedExploreLayer::getNextFrontierService, this);
+        allFrontiersService_ = nh_.advertiseService("get_all_frontiers", &BoundedExploreLayer::getAllFrontiersService, this);
 
         dsrv_ = new dynamic_reconfigure::Server<costmap_2d::GenericPluginConfig>(nh_);
         dynamic_reconfigure::Server<costmap_2d::GenericPluginConfig>::CallbackType cb = boost::bind(
@@ -77,10 +78,10 @@ namespace frontier_exploration
     }
 
     bool BoundedExploreLayer::getNextFrontierService(frontier_exploration::GetNextFrontier::Request &req, frontier_exploration::GetNextFrontier::Response &res){
-        return getNextFrontier(req.start_pose, res.next_frontier);
+        return getNextFrontier(req.start_pose, res.next_frontier, res.error_code);
     }
 
-    bool BoundedExploreLayer::getNextFrontier(geometry_msgs::PoseStamped start_pose, geometry_msgs::PoseStamped &next_frontier){
+    bool BoundedExploreLayer::getNextFrontier(geometry_msgs::PoseStamped start_pose, geometry_msgs::PoseStamped &next_frontier, int &error_code){
 
         //wait for costmap to get marked with boundary
         ros::Rate r(10);
@@ -93,7 +94,8 @@ namespace frontier_exploration
             //error out if no transform available
             if(!tf_listener_.waitForTransform(layered_costmap_->getGlobalFrameID(), start_pose.header.frame_id,ros::Time::now(),ros::Duration(10))) {
                 ROS_ERROR_STREAM("Couldn't transform from "<<layered_costmap_->getGlobalFrameID()<<" to "<< start_pose.header.frame_id);
-                return false;
+                error_code =  frontier_exploration::GetNextFrontier::Response::TF_ERROR;
+                return true;
             }
             geometry_msgs::PoseStamped temp_pose = start_pose;
             tf_listener_.transformPose(layered_costmap_->getGlobalFrameID(),temp_pose,start_pose);
@@ -106,7 +108,8 @@ namespace frontier_exploration
 
         if(frontier_list.size() == 0){
             ROS_DEBUG("No frontiers found, exploration complete");
-            return false;
+            error_code = frontier_exploration::GetNextFrontier::Response::NO_FRONTIERS;
+            return true;
         }
 
         //create placeholder for selected frontier
@@ -158,8 +161,69 @@ namespace frontier_exploration
         }
 
         next_frontier.pose.orientation = tf::createQuaternionMsgFromYaw( yawOfVector(start_pose.pose.position, next_frontier.pose.position) );
+        error_code = frontier_exploration::GetNextFrontier::Response::SUCCESS;
         return true;
 
+    }
+
+    bool BoundedExploreLayer::getAllFrontiersService(frontier_exploration::GetAllFrontiers::Request &req, 
+                                                    frontier_exploration::GetAllFrontiers::Response &res){
+        int error_code;
+        geometry_msgs::PoseStamped start_pose;
+
+        // Wait for costmap to get marked with boundary
+        ros::Rate r(10);
+        while(!marked_){
+            ros::spinOnce();
+            r.sleep();
+        }
+
+        start_pose = req.start_pose;
+        if(start_pose.header.frame_id != layered_costmap_->getGlobalFrameID()){
+            // error out if no transform available
+            if(!tf_listener_.waitForTransform(layered_costmap_->getGlobalFrameID(), start_pose.header.frame_id,ros::Time::now(),ros::Duration(10))) {
+                ROS_ERROR_STREAM("Couldn't transform from "<<layered_costmap_->getGlobalFrameID()<<" to "<< start_pose.header.frame_id);
+                error_code =  frontier_exploration::GetNextFrontier::Response::TF_ERROR;
+                return true;
+            }
+            geometry_msgs::PoseStamped temp_pose = start_pose;
+            tf_listener_.transformPose(layered_costmap_->getGlobalFrameID(),temp_pose,start_pose);
+        }
+
+        // initialize frontier search implementation
+        FrontierSearch frontierSearch(*(layered_costmap_->getCostmap()));
+        // get list of frontiers from search implementation
+        std::list<Frontier> frontier_list = frontierSearch.searchFrom(start_pose.pose.position);
+
+        if(frontier_list.size() == 0){
+            ROS_DEBUG("No frontiers found, exploration complete");
+            error_code = frontier_exploration::GetNextFrontier::Response::NO_FRONTIERS;
+            return true;
+        }
+
+        for(const Frontier& f : frontier_list){
+            geometry_msgs::PoseStamped frontier;
+            if(frontier_travel_point_ == "closest"){
+                frontier.pose.position = f.initial;
+            }
+            else if(frontier_travel_point_ == "middle"){
+                frontier.pose.position = f.middle;
+            }
+            else if(frontier_travel_point_ == "centroid"){
+                frontier.pose.position = f.centroid;
+            }
+            else{
+                ROS_ERROR("Invalid 'frontier_travel_point' parameter, falling back to 'closest'");
+                frontier.pose.position = f.initial;
+            }
+            frontier.pose.orientation = tf::createQuaternionMsgFromYaw( yawOfVector(start_pose.pose.position, frontier.pose.position));
+            frontier.header.frame_id = layered_costmap_->getGlobalFrameID();
+            frontier.header.stamp = ros::Time::now();
+            res.frontiers.push_back(frontier);
+        }
+
+        res.error_code = frontier_exploration::GetNextFrontier::Response::SUCCESS;
+        return true;
     }
 
     bool BoundedExploreLayer::updateBoundaryPolygonService(frontier_exploration::UpdateBoundaryPolygon::Request &req, frontier_exploration::UpdateBoundaryPolygon::Response &res){
