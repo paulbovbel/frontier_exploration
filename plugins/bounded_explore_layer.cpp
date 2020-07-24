@@ -15,6 +15,7 @@
 #include <frontier_exploration/GetNextFrontier.h>
 #include <frontier_exploration/frontier_search.h>
 #include <frontier_exploration/geometry_tools.h>
+#include <pluginlib/class_loader.hpp>
 
 PLUGINLIB_EXPORT_CLASS(frontier_exploration::BoundedExploreLayer, costmap_2d::Layer)
 
@@ -57,6 +58,7 @@ namespace frontier_exploration
         polygonService_ = nh_.advertiseService("update_boundary_polygon", &BoundedExploreLayer::updateBoundaryPolygonService, this);
         frontierService_ = nh_.advertiseService("get_next_frontier", &BoundedExploreLayer::getNextFrontierService, this);
         allFrontiersService_ = nh_.advertiseService("get_all_frontiers", &BoundedExploreLayer::getAllFrontiersService, this);
+        clearLayerService_ = nh_.advertiseService("clear_costmap_layer", &BoundedExploreLayer::clearLayerService, this);
 
         dsrv_ = new dynamic_reconfigure::Server<costmap_2d::GenericPluginConfig>(nh_);
         dynamic_reconfigure::Server<costmap_2d::GenericPluginConfig>::CallbackType cb = boost::bind(
@@ -165,6 +167,38 @@ namespace frontier_exploration
         return true;
 
     }
+
+    bool BoundedExploreLayer::clearLayerService(frontier_exploration::ClearCostmapLayer::Request &req, 
+                                                    frontier_exploration::ClearCostmapLayer::Response &res){
+        bool valid_layer = false;
+        std::vector<std::string> layer_names;
+        // Costmap2D* top = layered_costmap_->getCostmap();       
+        // top->resetMap(0, 0, top->getSizeInCellsX(), top->getSizeInCellsY());
+        std::vector < boost::shared_ptr<Layer> > *plugins = layered_costmap_->getPlugins();                                         
+        for (std::vector<boost::shared_ptr<Layer> >::iterator plugin = plugins->begin(); plugin != plugins->end(); ++plugin)
+        {
+            std::string name = (*plugin)->getName();
+            layer_names.push_back(name);
+            if(name == req.layer_name){
+                ROS_INFO_STREAM("Resetting layer " << name);   
+                (*plugin)->reset();
+                valid_layer = true;
+            }
+        }
+
+        if(!valid_layer){
+            ROS_WARN_STREAM("Could not find layer " << req.layer_name);
+            std::string msg = "Available layer are:";
+            for(auto const layer : layer_names){
+                msg = msg + " " + layer + ",";
+            }
+            msg.pop_back();
+            ROS_WARN_STREAM(msg);
+        }
+
+        res.success = valid_layer;
+        return true;
+    }  
 
     bool BoundedExploreLayer::getAllFrontiersService(frontier_exploration::GetAllFrontiers::Request &req, 
                                                     frontier_exploration::GetAllFrontiers::Response &res){

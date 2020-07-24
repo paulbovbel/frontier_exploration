@@ -30,6 +30,7 @@ add_service_files(
   UpdateBoundaryPolygon.srv
   GetNextFrontier.srv
   GetAllFrontiers.srv
+  ClearCostmapLayer.srv
 )
 
 add_action_files(

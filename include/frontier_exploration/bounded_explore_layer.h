@@ -11,6 +11,7 @@
 #include <frontier_exploration/UpdateBoundaryPolygon.h>
 #include <frontier_exploration/GetNextFrontier.h>
 #include <frontier_exploration/GetAllFrontiers.h>
+#include <frontier_exploration/ClearCostmapLayer.h>
 
 namespace frontier_exploration
 {
@@ -98,6 +99,15 @@ protected:
      */
     bool getAllFrontiersService(frontier_exploration::GetAllFrontiers::Request &req, 
                                 frontier_exploration::GetAllFrontiers::Response &res);
+
+     /**
+     * @brief Reset costmap layer specified in request message
+     * @param req Service request
+     * @param res Service response
+     * @return True if no unexpected errors
+     */
+    bool clearLayerService(frontier_exploration::ClearCostmapLayer::Request &req, 
+                            frontier_exploration::ClearCostmapLayer::Response &res);
 private:
 
     /**
@@ -112,6 +122,8 @@ private:
     ros::ServiceServer polygonService_;
     ros::ServiceServer frontierService_;
     ros::ServiceServer allFrontiersService_;
+    ros::ServiceServer clearLayerService_;
+
     geometry_msgs::Polygon polygon_;
     tf::TransformListener tf_listener_;
 
