@@ -22,7 +22,7 @@ ExplorationServer::ExplorationServer(ros::NodeHandle nh, ros::NodeHandle private
   tf2_listener_(tf2_buffer_),
   success_(false),
   moving_(false),
-  move_client_("p3_001/move_base", true),
+  move_client_("move_base", true),
   previous_state_(actionlib::SimpleClientGoalState::PENDING),
   explore_action_server_(nh,
                         "exploration_server_node",
