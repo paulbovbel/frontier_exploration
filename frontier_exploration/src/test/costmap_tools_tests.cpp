@@ -1,7 +1,7 @@
-#include "ros/ros.h"
+#include "boost/foreach.hpp"
 #include "costmap_2d/costmap_2d.h"
 #include "frontier_exploration/costmap_tools.h"
-#include "boost/foreach.hpp"
+#include "ros/ros.h"
 
 #include <gtest/gtest.h>
 #include <limits>
@@ -32,13 +32,12 @@ TEST_F(NeighborhoodFunctionTest, edge)
     to_test.push_back(costmap_.getIndex(4, 0));
     to_test.push_back(costmap_.getIndex(8, 4));
     to_test.push_back(costmap_.getIndex(0, 4));
-    BOOST_FOREACH(unsigned int idx, to_test)
+    BOOST_FOREACH (unsigned int idx, to_test)
     {
         ASSERT_EQ(3u, frontier_exploration::nhood4(idx, costmap_).size());
         ASSERT_EQ(5u, frontier_exploration::nhood8(idx, costmap_).size());
     }
 }
-
 
 TEST_F(NeighborhoodFunctionTest, corner)
 {
@@ -47,7 +46,7 @@ TEST_F(NeighborhoodFunctionTest, corner)
     to_test.push_back(costmap_.getIndex(8, 0));
     to_test.push_back(costmap_.getIndex(8, 0));
     to_test.push_back(costmap_.getIndex(0, 0));
-    BOOST_FOREACH(unsigned int idx, to_test)
+    BOOST_FOREACH (unsigned int idx, to_test)
     {
         ASSERT_EQ(2u, frontier_exploration::nhood4(idx, costmap_).size());
         ASSERT_EQ(3u, frontier_exploration::nhood8(idx, costmap_).size());
@@ -71,8 +70,8 @@ protected:
         unsigned char* map = costmap_.getCharMap();
         const unsigned int size_x = costmap_.getSizeInCellsX(), size_y = costmap_.getSizeInCellsY();
 
-        std::fill(map, map+ (size_x*size_y)/2, 0);
-        std::fill(map+(size_x*size_y)/2 + 1, map+(size_x*size_y), 1);
+        std::fill(map, map + (size_x * size_y) / 2, 0);
+        std::fill(map + (size_x * size_y) / 2 + 1, map + (size_x * size_y), 1);
     }
 
     costmap_2d::Costmap2D costmap_;
@@ -101,7 +100,7 @@ TEST_F(NearestCellTest, offMap)
     ASSERT_FALSE(frontier_exploration::nearestCell(result, input, 1, costmap_));
 }
 
-int main(int argc, char **argv)
+int main(int argc, char** argv)
 {
     testing::InitGoogleTest(&argc, argv);
     return RUN_ALL_TESTS();

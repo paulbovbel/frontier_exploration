@@ -13,7 +13,8 @@
 
     <node pkg="exploration_server" type="exploration_server_node" name="exploration_server_node" output="screen">
 
-        <rosparam param="points" ns="explore_costmap" file="$(find exploration_server)/config/points.yaml" command="load"/>
+        <rosparam param="points" ns="explore_costmap" file="$(find exploration_server)/config/points.yaml"
+                  command="load"/>
         <param name="frequency" type="double" value="2.0"/>
         <param name="goal_aliasing" type="double" value="$(arg sensor_range)"/>
 
@@ -36,28 +37,29 @@
 
             plugins:
 
-                - {name: static,           type: "costmap_2d::StaticLayer"}
-                - {name: polygon_layer,    type: "polygon_layer::PolygonLayer"}
-                #Can disable sensor layer if gmapping is fast enough to update scans
-                - {name: sensor,           type: "costmap_2d::ObstacleLayer"}
-                - {name: inflation,        type: "costmap_2d::InflationLayer"}
+            - {name: static, type: "costmap_2d::StaticLayer"}
+            - {name: polygon_layer, type: "polygon_layer::PolygonLayer"}
+            #Can disable sensor layer if gmapping is fast enough to update scans
+            - {name: sensor, type: "costmap_2d::ObstacleLayer"}
+            - {name: inflation, type: "costmap_2d::InflationLayer"}
 
             static:
-                #Can pull data from gmapping, map_server or a non-rolling costmap
-                map_topic: /map
-                # map_topic: move_base/global_costmap/costmap
-                subscribe_to_updates: true
+            #Can pull data from gmapping, map_server or a non-rolling costmap
+            map_topic: /map
+            # map_topic: move_base/global_costmap/costmap
+            subscribe_to_updates: true
 
             polygon_layer:
-                resize_to_polygon: true
+            resize_to_polygon: true
 
             sensor:
-                observation_sources: laser
-                laser: {data_type: LaserScan, clearing: true, marking: true, topic: scan, inf_is_valid: true, raytrace_range: $(arg sensor_range), obstacle_range: $(arg sensor_range)}
+            observation_sources: laser
+            laser: {data_type: LaserScan, clearing: true, marking: true, topic: scan, inf_is_valid: true,
+            raytrace_range: $(arg sensor_range), obstacle_range: $(arg sensor_range)}
 
             inflation:
-                inflation_radius: 0.15
-      </rosparam>
+            inflation_radius: 0.15
+        </rosparam>
 
     </node>
 
