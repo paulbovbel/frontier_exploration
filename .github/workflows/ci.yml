@@ -1,0 +1,27 @@
+name: CI - ROS Noetic
+
+on:
+  pull_request:
+  push:
+    branches:
+      - master
+
+jobs:
+  industrial_ci:
+    strategy:
+      matrix:
+        env:
+          - { ROS_DISTRO: noetic, ROS_REPO: exploration }
+    env:
+      CCACHE_DIR: /github/home/.ccache
+    runs-on: ubuntu-20.04
+    steps:
+      - uses: actions/checkout@v2
+
+      - uses: actions/cache@v2
+        with:
+          path: ${{ env.CCACHE_DIR }}
+          key: ccache-${{ matrix.env.ROS_DISTRO }}-${{ matrix.env.ROS_REPO }}
+
+      - uses: 'ros-industrial/industrial_ci@master'
+        env: ${{ matrix.env }}
