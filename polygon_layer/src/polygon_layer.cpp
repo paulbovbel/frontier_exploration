@@ -157,10 +157,10 @@ void PolygonLayer::updateBounds(double robot_x, double robot_y, double robot_yaw
   if (!activated_ || !enabled_ || polygon_.polygon.points.empty())
   { return; }
 
-  *min_x = min_x_;
-  *min_y = min_y_;
-  *max_x = max_x_;
-  *max_y = max_y_;
+  *min_x = std::min(*min_x, min_x_);
+  *min_y = std::min(*min_y, min_y_);
+  *max_x = std::max(*max_x, max_x_);
+  *max_y = std::max(*max_y, max_y_);
   MarkCell marker(costmap_, LETHAL_OBSTACLE);
   for (unsigned int i = 0, j = polygon_.polygon.points.size()-1; i < polygon_.polygon.points.size(); j = i++)
   {
